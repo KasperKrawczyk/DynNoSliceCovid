@@ -15,12 +15,7 @@
  */
 package ocotillo.graph;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A basic graph that only handles nodes and edges, with no attribute or graph
@@ -30,6 +25,7 @@ public class GraphWithElements {
 
     private final Map<String, Node> nodeMap = new HashMap<>();
     private final Map<String, Edge> edgeMap = new HashMap<>();
+    private final Map<String, Cluster> clusterMap = new HashMap<>();
 
     private final Map<Node, Set<Edge>> incomingMap = new HashMap<>();
     private final Map<Node, Set<Edge>> outgoingMap = new HashMap<>();
@@ -39,6 +35,7 @@ public class GraphWithElements {
 
     static long nodeIdIndex = 0;
     static long edgeIdIndex = 0;
+    static long clusterIdIndex = 0;
 
     boolean bulkNotify = false;
 
@@ -177,6 +174,59 @@ public class GraphWithElements {
     }
 
     /**
+     * Returns the graph nodes.
+     *
+     * @return the graph nodes.
+     */
+    public Collection<Cluster> clusters() {
+        return Collections.unmodifiableCollection(clusterMap.values());
+    }
+
+    /**
+     * Creates and inserts a new cluster.
+     *
+     * @param pole the centre node of the cluster
+     * @param members a list of the members of the cluster, without the pole node
+     * @return the new node.
+     */
+    public Cluster newCluster(Node pole, List<Node> members) {
+
+        Cluster cluster = new Cluster(pole, members);
+        add(cluster);
+        return cluster;
+    }
+
+    /**
+     * Checks if a node with given id is part of the graph.
+     *
+     * @param id the node id.
+     * @return true if the node is contained in the graph, false otherwise.
+     */
+    public boolean hasCluster(String id) {
+        return clusterMap.containsKey(id);
+    }
+
+    /**
+     * Returns a node with given id.
+     *
+     * @param id the node id.
+     * @return the cluster having given id.
+     */
+    public Cluster getCluster(String id) {
+        return clusterMap.get(id);
+    }
+
+    /**
+     * Returns the number of clusters in the graph.
+     *
+     * @return the number of graph clusters.
+     */
+    public int clusterCount() {
+        return clusterMap.size();
+    }
+
+
+    /**
      * Checks if an element is contained in the graph.
      *
      * @param element the element.
@@ -188,6 +238,9 @@ public class GraphWithElements {
         }
         if (element instanceof Edge) {
             return hasEdge(element.id());
+        }
+        if (element instanceof Cluster) {
+            return hasCluster(element.id());
         }
         return false;
     }
@@ -240,6 +293,12 @@ public class GraphWithElements {
             edgeMap.put(edge.id(), edge);
             outgoingMap.get(edge.source()).add(edge);
             incomingMap.get(edge.target()).add(edge);
+        }
+
+        if (element instanceof Cluster) {
+            Cluster cluster = (Cluster) element;
+
+            clusterMap.put(cluster.id(), cluster);
         }
 
         changedElements.add(element);
@@ -322,6 +381,11 @@ public class GraphWithElements {
             edgeMap.remove(edge.id());
             outgoingMap.get(edge.source()).remove(edge);
             incomingMap.get(edge.target()).remove(edge);
+        }
+
+        if (element instanceof Cluster) {
+            Cluster cluster = (Cluster) element;
+            clusterMap.remove(cluster.id());
         }
 
         changedElements.add(element);
@@ -479,6 +543,11 @@ public class GraphWithElements {
         } else {
             return edges.iterator().next();
         }
+    }
+
+    public Collection<Node> clusterMembers(Node pole){
+        Cluster cluster = this.clusterMap.get(pole.id());
+        return cluster.members();
     }
 
     /**

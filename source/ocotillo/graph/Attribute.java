@@ -83,7 +83,8 @@ public interface Attribute<T> {
 
         graph,
         node,
-        edge
+        edge,
+        cluster
     }
 
 }

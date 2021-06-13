@@ -25,8 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import ocotillo.dygraph.DyAttribute;
-import ocotillo.dygraph.DyGraph;
+
+import ocotillo.dygraph.*;
 import ocotillo.geometry.Coordinates;
 
 /**
@@ -41,6 +41,10 @@ public enum StdAttribute {
     edgeWidth(Double.class),
     edgeShape(EdgeShape.class),
     edgePoints(ControlPoints.class),
+    // Cluster update - start
+    clusterWidth(Double.class),
+    clusterShape(ClusterShape.class),
+    // Cluster update - finish
     color(Color.class),
     label(String.class),
     labelColor(Color.class),
@@ -53,10 +57,11 @@ public enum StdAttribute {
     /**
      * Collects the attributes that affect the graph layout.
      */
-    public static final StdAttributeSet thatAffectlayout = new StdAttributeSet(
+    public static final StdAttributeSet thatAffectLayout = new StdAttributeSet(
             Arrays.<StdAttribute>asList(),
             Arrays.asList(nodePosition, nodeSize, nodeShape),
-            Arrays.asList(edgeWidth, edgeShape, edgePoints));
+            Arrays.asList(edgeWidth, edgeShape, edgePoints),
+            Arrays.asList(clusterWidth, clusterShape));
 
     /**
      * Collects the attributes that affect the graph rendering.
@@ -64,7 +69,8 @@ public enum StdAttribute {
     public static final StdAttributeSet thatAffectRendering = new StdAttributeSet(
             Arrays.asList(graphics, background),
             Arrays.asList(nodePosition, nodeSize, nodeShape, nodeHeat, color, label, labelColor, labelScaling, labelOffset),
-            Arrays.asList(edgeWidth, edgeShape, edgePoints, color));
+            Arrays.asList(edgeWidth, edgeShape, edgePoints, color),
+            Arrays.asList(clusterWidth, clusterShape));
 
     /**
      * Collects the attributes that are reserved for dynamic graphs.
@@ -138,7 +144,7 @@ public enum StdAttribute {
      * @return null if the attribute is not standard (for graphs), the attribute
      * otherwise.
      */
-    protected static GraphAttribute<?> createStdGraphAttribute(GraphWithAttributes<?, ?, ?, ?> graph, String attrId) {
+    protected static GraphAttribute<?> createStdGraphAttribute(GraphWithAttributes<?, ?, ?, ?, ?> graph, String attrId) {
         StdAttribute attribute = get(attrId);
         if (attribute == null) {
             // non-standard attribute id.
@@ -174,7 +180,7 @@ public enum StdAttribute {
      * @return null if the attribute is not standard (for nodes), the attribute
      * otherwise.
      */
-    protected static NodeAttribute<?> createStdNodeAttribute(GraphWithAttributes<?, ?, ?, ?> graph, String attrId) {
+    protected static NodeAttribute<?> createStdNodeAttribute(GraphWithAttributes<?, ?, ?, ?, ?> graph, String attrId) {
         StdAttribute attribute = get(attrId);
         if (attribute == null) {
             // non-standard attribute id.
@@ -238,7 +244,7 @@ public enum StdAttribute {
      * @return null if the attribute is not standard (for edges), the attribute
      * otherwise.
      */
-    protected static EdgeAttribute<?> createStdEdgeAttribute(GraphWithAttributes<?, ?, ?, ?> graph, String attrId) {
+    protected static EdgeAttribute<?> createStdEdgeAttribute(GraphWithAttributes<?, ?, ?, ?, ?> graph, String attrId) {
         StdAttribute attribute = get(attrId);
         if (attribute == null) {
             // non-standard attribute id.
@@ -279,6 +285,38 @@ public enum StdAttribute {
     }
 
     /**
+     * Creates a standard edge attribute and initialize it to its default value.
+     *
+     * @param graph the graph.
+     * @param attrId the attribute id.
+     * @return null if the attribute is not standard (for edges), the attribute
+     * otherwise.
+     */
+    protected static ClusterAttribute<?> createStdClusterAttribute(GraphWithAttributes<?, ?, ?, ?, ?> graph, String attrId) {
+        StdAttribute attribute = get(attrId);
+        if (attribute == null) {
+            // non-standard attribute id.
+            return null;
+        }
+
+        ClusterAttribute<?> createdAttribute;
+        switch (attribute) {
+            case clusterWidth:
+                createdAttribute = graph.newClusterAttribute(attrId, 0.2);
+                createdAttribute.setDescription("The width of the clusters.");
+                break;
+            case clusterShape:
+                createdAttribute = graph.newClusterAttribute(attrId, ClusterShape.ellipse);
+                createdAttribute.setDescription("The type of the cluster.");
+                break;
+            default:
+                return null;
+        }
+        createdAttribute.setSleeping();
+        return createdAttribute;
+    }
+
+    /**
      * Checks a newly created graph attribute. if the attribute id is reserved,
      * verifies that the type associated corresponds to the defined matching.
      *
@@ -286,7 +324,7 @@ public enum StdAttribute {
      * @param attrId the attribute id.
      * @param newAttribute the graph attribute created.
      */
-    protected static void checkStdAttributeCompatibility(GraphWithAttributes<?, ?, ?, ?> graph, String attrId, Attribute<?> newAttribute) {
+    protected static void checkStdAttributeCompatibility(GraphWithAttributes<?, ?, ?, ?, ?> graph, String attrId, Attribute<?> newAttribute) {
         StdAttribute attribute = get(attrId);
         if (attribute != null) {
             if (graph instanceof DyGraph) {
@@ -326,6 +364,14 @@ public enum StdAttribute {
     }
 
     /**
+     * Supported edge shapes.
+     */
+    public static enum ClusterShape {
+
+        ellipse;
+    }
+
+    /**
      * List of control points associated to an edge.
      */
     public static class ControlPoints extends ArrayList<Coordinates> {
@@ -350,6 +396,7 @@ public enum StdAttribute {
         List<StdAttribute> graphAttributes;
         List<StdAttribute> nodeAttributes;
         List<StdAttribute> edgeAttributes;
+        List<StdAttribute> clusterAttributes;
 
         /**
          * Constructs a set of standard attributes.
@@ -358,10 +405,12 @@ public enum StdAttribute {
          * @param nodeAttributes the node attributes.
          * @param edgeAttributes the edge attributes.
          */
-        public StdAttributeSet(List<StdAttribute> graphAttributes, List<StdAttribute> nodeAttributes, List<StdAttribute> edgeAttributes) {
+        public StdAttributeSet(List<StdAttribute> graphAttributes, List<StdAttribute> nodeAttributes,
+                               List<StdAttribute> edgeAttributes, List<StdAttribute> clusterAttributes) {
             this.graphAttributes = Collections.unmodifiableList(graphAttributes);
             this.nodeAttributes = Collections.unmodifiableList(nodeAttributes);
             this.edgeAttributes = Collections.unmodifiableList(edgeAttributes);
+            this.clusterAttributes = Collections.unmodifiableList(clusterAttributes);
         }
 
         /**
@@ -402,6 +451,20 @@ public enum StdAttribute {
             List<EdgeAttribute<?>> attributes = new ArrayList<>();
             for (StdAttribute stdAttributeId : edgeAttributes) {
                 attributes.add(graph.edgeAttribute(stdAttributeId));
+            }
+            return attributes;
+        }
+
+        /**
+         * Returns the edge attributes in this set for a given graph.
+         *
+         * @param graph the graph.
+         * @return the standard edge attributes extracted for the graph.
+         */
+        public Collection<ClusterAttribute<?>> clusterAttributes(Graph graph) {
+            List<ClusterAttribute<?>> attributes = new ArrayList<>();
+            for (StdAttribute stdAttributeId : clusterAttributes) {
+                attributes.add(graph.clusterAttribute(stdAttributeId));
             }
             return attributes;
         }

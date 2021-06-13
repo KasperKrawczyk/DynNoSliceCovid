@@ -22,14 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import ocotillo.dygraph.Evolution;
-import ocotillo.graph.Attribute;
-import ocotillo.graph.Edge;
-import ocotillo.graph.EdgeAttribute;
-import ocotillo.graph.Element;
-import ocotillo.graph.GraphWithAttributes;
-import ocotillo.graph.Node;
-import ocotillo.graph.NodeAttribute;
-import ocotillo.graph.StdAttribute;
+import ocotillo.graph.*;
 
 /**
  * Writer for oco files.
@@ -56,7 +49,7 @@ public class OcoWriter {
      * @param graph the input graph.
      * @return the graph description in oco format.
      */
-    protected List<String> write(GraphWithAttributes<?, ?, ?, ?> graph) {
+    protected List<String> write(GraphWithAttributes<?, ?, ?, ?, ?> graph) {
         List<String> lines = new LinkedList<>();
         writeGraph(graph, 0, lines);
         return lines;
@@ -69,7 +62,7 @@ public class OcoWriter {
      * @param graphLevel the current graph level.
      * @param lines the file lines.
      */
-    private void writeGraph(GraphWithAttributes<?, ?, ?, ?> graph, int graphLevel, List<String> lines) {
+    private void writeGraph(GraphWithAttributes<?, ?, ?, ?, ?> graph, int graphLevel, List<String> lines) {
         writeGraphHeader(graphLevel, lines);
         writeAttributesAndElements(graph, Attribute.Type.graph, lines);
         lines.add("");
@@ -79,9 +72,12 @@ public class OcoWriter {
         lines.add("#edges");
         writeAttributesAndElements(graph, Attribute.Type.edge, lines);
         lines.add("");
+        lines.add("#clusters");
+        writeAttributesAndElements(graph, Attribute.Type.cluster, lines);
+        lines.add("");
         lines.add("");
 
-        for (GraphWithAttributes<?, ?, ?, ?> subgraph : graph.subGraphs()) {
+        for (GraphWithAttributes<?, ?, ?, ?, ?> subgraph : graph.subGraphs()) {
             writeGraph(subgraph, graphLevel + 1, lines);
         }
     }
@@ -108,7 +104,7 @@ public class OcoWriter {
      * @param lines the file lines.
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void writeAttributesAndElements(GraphWithAttributes<?, ?, ?, ?> graph, Attribute.Type generalAttrType, List<String> lines) {
+    private void writeAttributesAndElements(GraphWithAttributes<?, ?, ?, ?, ?> graph, Attribute.Type generalAttrType, List<String> lines) {
         StringBuilder attributes = new StringBuilder("@attribute\t");
         StringBuilder types = new StringBuilder("@type\t");
         StringBuilder defaults = new StringBuilder("@default\t");
@@ -149,6 +145,12 @@ public class OcoWriter {
                         EdgeAttribute edgeAttribute = (EdgeAttribute) attribute;
                         String value = converter.graphLibToOco(edgeAttribute.get(edge)) + "\t";
                         elements.get(edge).append(value);
+                    }
+                } else if(generalAttrType == Attribute.Type.cluster) {
+                    for(Cluster cluster : graph.clusters()) {
+                        ClusterAttribute clusterAttribute = (ClusterAttribute) attribute;
+                        String value = converter.graphLibToOco(clusterAttribute.get(cluster)) + "\t";
+                        elements.get(cluster).append(value);
                     }
                 }
             }
@@ -191,7 +193,7 @@ public class OcoWriter {
      * @param isRootGraph indicates if the graph is the root one.
      * @return the element map.
      */
-    private Map<Element, StringBuilder> prepareElementsMap(GraphWithAttributes<?, ?, ?, ?> graph, Attribute.Type generalAttrType, boolean isRootGraph) {
+    private Map<Element, StringBuilder> prepareElementsMap(GraphWithAttributes<?, ?, ?, ?, ?> graph, Attribute.Type generalAttrType, boolean isRootGraph) {
         Map<Element, StringBuilder> elements = new HashMap<>();
         if (generalAttrType == Attribute.Type.node) {
             for (Node node : graph.nodes()) {
@@ -205,6 +207,10 @@ public class OcoWriter {
                             .append(edge.target().id()).append("\t");
                 }
                 elements.put(edge, edgeLine);
+            }
+        } else if (generalAttrType == Attribute.Type.cluster) {
+            for(Cluster cluster : graph.clusters()) {
+                elements.put(cluster, new StringBuilder(cluster.id() + "\t"));
             }
         }
         return elements;

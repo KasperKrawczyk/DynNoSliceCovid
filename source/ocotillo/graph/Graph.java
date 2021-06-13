@@ -18,7 +18,8 @@ package ocotillo.graph;
 /**
  * A graph.
  */
-public class Graph extends GraphWithAttributes<Graph, GraphAttribute<?>, NodeAttribute<?>, EdgeAttribute<?>> {
+public class Graph extends GraphWithAttributes<Graph, GraphAttribute<?>,
+        NodeAttribute<?>, EdgeAttribute<?>, ClusterAttribute<?>> {
 
     @Override
     protected Graph createGraph() {
@@ -89,6 +90,26 @@ public class Graph extends GraphWithAttributes<Graph, GraphAttribute<?>, NodeAtt
         return (EdgeAttribute<T>) super.edgeAttribute(attrId);
     }
 
+    /**
+     * Returns a standard cluster attribute. It returns the first attribute with
+     * given id in the path from this graph and its root in the graph hierarchy.
+     * If called on a standard attribute (for edges) that does not exists, it
+     * creates the attribute rather than throwing an exception.
+     *
+     * @param <T> the type of the returned value.
+     * @param attribute the standard attribute.
+     * @return the attribute.
+     */
+    public <T> ClusterAttribute<T> clusterAttribute(StdAttribute attribute) {
+        return clusterAttribute(attribute.name());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> ClusterAttribute<T> clusterAttribute(String attrId) {
+        return (ClusterAttribute<T>) super.clusterAttribute(attrId);
+    }
+
     // ======================================================================
     // ======== New attribute creation ======================================
     // ======================================================================
@@ -153,6 +174,27 @@ public class Graph extends GraphWithAttributes<Graph, GraphAttribute<?>, NodeAtt
     public <T> EdgeAttribute<T> newEdgeAttribute(String attrId, T defaultValue) {
         EdgeAttribute<T> attribute = new EdgeAttribute<>(defaultValue);
         setAttribute(Attribute.Type.edge, attrId, attribute);
+        return attribute;
+    }
+
+    /**
+     * Creates and inserts a standard cluster attribute in the root graph. If an
+     * attribute with the same id already exists in the hierarchy, throws and
+     * exception.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attribute the standard attribute.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> ClusterAttribute<T> newClusterAttribute(StdAttribute attribute, T defaultValue) {
+        return newClusterAttribute(attribute.name(), defaultValue);
+    }
+
+    @Override
+    public <T> ClusterAttribute<T> newClusterAttribute(String attrId, T defaultValue) {
+        ClusterAttribute<T> attribute = new ClusterAttribute<>(defaultValue);
+        setAttribute(Attribute.Type.cluster, attrId, attribute);
         return attribute;
     }
 
@@ -223,6 +265,28 @@ public class Graph extends GraphWithAttributes<Graph, GraphAttribute<?>, NodeAtt
     @Override
     public <T> EdgeAttribute<T> newLocalEdgeAttribute(String attrId, T defaultValue) {
         EdgeAttribute<T> attribute = new EdgeAttribute<>(defaultValue);
+        setLocalAttribute(Attribute.Type.edge, attrId, attribute);
+        return attribute;
+    }
+
+    /**
+     * Creates and insert a standard edge attribute in this graph. If an
+     * attribute with the same id already exists in this graph, throws and
+     * exception. Attributes created locally are inaccessible at higher levels
+     * of the hierarchy and override higher level attributes with the same id.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attribute the standard attribute.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> ClusterAttribute<T> newLocalClusterAttribute(StdAttribute attribute, T defaultValue) {
+        return newLocalClusterAttribute(attribute.name(), defaultValue);
+    }
+
+    @Override
+    public <T> ClusterAttribute<T> newLocalClusterAttribute(String attrId, T defaultValue) {
+        ClusterAttribute<T> attribute = new ClusterAttribute<>(defaultValue);
         setLocalAttribute(Attribute.Type.edge, attrId, attribute);
         return attribute;
     }

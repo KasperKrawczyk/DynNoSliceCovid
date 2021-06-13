@@ -17,6 +17,7 @@ package ocotillo.dygraph;
 
 import lombok.EqualsAndHashCode;
 import ocotillo.geometry.Geom;
+import ocotillo.graph.*;
 import ocotillo.graph.rendering.YuvColor;
 import ocotillo.geometry.Interval;
 
@@ -314,7 +315,7 @@ public abstract class FunctionRect<T> implements Function<T> {
     }
 
     /**
-     * An interval function that handles node shape values.
+     * An interval function that handles edge shape values.
      */
     public static class EdgeShape extends FunctionRect<ocotillo.graph.StdAttribute.EdgeShape> {
 
@@ -336,6 +337,33 @@ public abstract class FunctionRect<T> implements Function<T> {
 
         @Override
         protected ocotillo.graph.StdAttribute.EdgeShape multiply(ocotillo.graph.StdAttribute.EdgeShape a, double b) {
+            throw new UnsupportedOperationException("Not supported for edge shapes. Use intepolation functions that only return 0 or 1.");
+        }
+    }
+
+    /**
+     * An interval function that handles edge shape values.
+     */
+    public static class ClusterShape extends FunctionRect<StdAttribute.ClusterShape> {
+
+        public ClusterShape(Interval definitionInterval, ocotillo.graph.StdAttribute.ClusterShape initialValue,
+                         ocotillo.graph.StdAttribute.ClusterShape finalValue, Interpolation interpolation) {
+            super(definitionInterval, initialValue, finalValue, interpolation);
+        }
+
+        public ClusterShape(Interval definitionInterval, ocotillo.graph.StdAttribute.ClusterShape initialValue,
+                         ocotillo.graph.StdAttribute.ClusterShape finalValue, Interpolation.Std interpolation) {
+            super(definitionInterval, initialValue, finalValue, interpolation.get());
+        }
+
+        @Override
+        protected ocotillo.graph.StdAttribute.ClusterShape subtract(StdAttribute.ClusterShape a,
+                                                                 ocotillo.graph.StdAttribute.ClusterShape b) {
+            throw new UnsupportedOperationException("Not supported for edge shapes. Use intepolation functions that only return 0 or 1.");
+        }
+
+        @Override
+        protected ocotillo.graph.StdAttribute.ClusterShape multiply(ocotillo.graph.StdAttribute.ClusterShape a, double b) {
             throw new UnsupportedOperationException("Not supported for edge shapes. Use intepolation functions that only return 0 or 1.");
         }
     }

@@ -19,6 +19,7 @@ import java.awt.Color;
 import ocotillo.geometry.Coordinates;
 import ocotillo.graph.StdAttribute.EdgeShape;
 import ocotillo.graph.StdAttribute.NodeShape;
+import ocotillo.graph.StdAttribute.ClusterShape;
 import ocotillo.geometry.Interval;
 
 /**
@@ -296,6 +297,27 @@ public class EvoBuilder {
         @Override
         public Builder<EdgeShape> withRect(Interval interval, EdgeShape leftValue, EdgeShape rightValue, Interpolation interpolation) {
             evolution.insert(new FunctionRect.EdgeShape(interval, leftValue, rightValue, interpolation));
+            return this;
+        }
+    }
+
+    /**
+     * The builder for cluster shape values.
+     */
+    private static class ClusterShapeBuilder extends Builder<ClusterShape> {
+
+        public ClusterShapeBuilder(Evolution<ClusterShape> evolution) {
+            super(evolution);
+        }
+
+        @Override
+        public Builder<ClusterShape> withRect(Interval interval, ClusterShape leftValue, ClusterShape rightValue, Interpolation interpolation) {
+            return null;
+        }
+
+        @Override
+        public Builder<EdgeShape> withRect(Interval interval, EdgeShape leftValue, EdgeShape rightValue, Interpolation interpolation) {
+            evolution.insert(new FunctionRect.ClusterShape(interval, leftValue, rightValue, interpolation));
             return this;
         }
     }

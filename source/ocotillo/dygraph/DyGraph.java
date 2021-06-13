@@ -16,17 +16,14 @@
 package ocotillo.dygraph;
 
 import java.util.Map;
-import ocotillo.graph.Attribute;
-import ocotillo.graph.Edge;
-import ocotillo.graph.Graph;
-import ocotillo.graph.GraphWithAttributes;
-import ocotillo.graph.Node;
-import ocotillo.graph.StdAttribute;
+
+import ocotillo.graph.*;
 
 /**
  * A dynamic graph.
  */
-public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>, DyNodeAttribute<?>, DyEdgeAttribute<?>> {
+public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>,
+        DyNodeAttribute<?>, DyEdgeAttribute<?>, DyClusterAttribute<?>> {
 
     @Override
     protected DyGraph createGraph() {
@@ -95,6 +92,26 @@ public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>, D
     @SuppressWarnings("unchecked")
     public <T> DyEdgeAttribute<T> edgeAttribute(String attrId) {
         return (DyEdgeAttribute<T>) super.edgeAttribute(attrId);
+    }
+
+    /**
+     * Returns a standard cluster attribute. It returns the first attribute with
+     * given id in the path from this graph and its root in the graph hierarchy.
+     * If called on a standard attribute (for edges) that does not exists, it
+     * creates the attribute rather than throwing an exception.
+     *
+     * @param <T> the type of the returned value.
+     * @param attribute the standard attribute.
+     * @return the attribute.
+     */
+    public <T> DyClusterAttribute<T> clusterAttribute(StdAttribute attribute) {
+        return clusterAttribute(attribute.name());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> DyClusterAttribute<T> clusterAttribute(String attrId) {
+        return (DyClusterAttribute<T>) super.clusterAttribute(attrId);
     }
 
     // ======================================================================
@@ -188,6 +205,35 @@ public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>, D
         return attribute;
     }
 
+    /**
+     * Creates and inserts a cluster edge attribute in the root graph. If an
+     * attribute with the same id already exists in the hierarchy, throws and
+     * exception.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attribute the standard attribute.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> DyClusterAttribute<T> newClusterAttribute(StdAttribute attribute, Evolution<T> defaultValue) {
+        return newClusterAttribute(attribute.name(), defaultValue);
+    }
+
+    /**
+     * Creates and inserts a cluster attribute in the root graph. If an attribute
+     * with the same id already exists in the hierarchy, throws and exception.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attrId the attribute id.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> DyClusterAttribute<T> newClusterAttribute(String attrId, Evolution<T> defaultValue) {
+        DyClusterAttribute<T> attribute = new DyClusterAttribute<>(defaultValue);
+        setAttribute(Attribute.Type.cluster, attrId, attribute);
+        return attribute;
+    }
+
     // ======================================================================
     // ======== New attribute creation - w/o evolution ======================
     // ======================================================================
@@ -252,6 +298,27 @@ public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>, D
     public <T> DyEdgeAttribute<T> newEdgeAttribute(String attrId, T defaultValue) {
         DyEdgeAttribute<T> attribute = new DyEdgeAttribute<>(defaultValue);
         setAttribute(Attribute.Type.edge, attrId, attribute);
+        return attribute;
+    }
+
+    /**
+     * Creates and inserts a standard cluster attribute in the root graph. If an
+     * attribute with the same id already exists in the hierarchy, throws and
+     * exception.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attribute the standard attribute.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> DyClusterAttribute<T> newClusterAttribute(StdAttribute attribute, T defaultValue) {
+        return newClusterAttribute(attribute.name(), defaultValue);
+    }
+
+    @Override
+    public <T> DyClusterAttribute<T> newClusterAttribute(String attrId, T defaultValue) {
+        DyClusterAttribute<T> attribute = new DyClusterAttribute<>(defaultValue);
+        setAttribute(Attribute.Type.cluster, attrId, attribute);
         return attribute;
     }
 
@@ -349,6 +416,35 @@ public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>, D
         return attribute;
     }
 
+    /**
+     * Creates and inserts a local standard cluster attribute in the root graph. If
+     * an attribute with the same id already exists in the hierarchy, throws and
+     * exception.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attribute the standard attribute.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> DyClusterAttribute<T> newLocalClusterAttribute(StdAttribute attribute, Evolution<T> defaultValue) {
+        return newLocalClusterAttribute(attribute.name(), defaultValue);
+    }
+
+    /**
+     * Creates and inserts a local cluster attribute in the root graph. If an
+     * attribute with the same id already exists in the hierarchy, throws and
+     * exception.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attrId the attribute id.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> DyClusterAttribute<T> newLocalClusterAttribute(String attrId, Evolution<T> defaultValue) {
+        DyClusterAttribute<T> attribute = new DyClusterAttribute<>(defaultValue);
+        setLocalAttribute(Attribute.Type.cluster, attrId, attribute);
+        return attribute;
+    }
     // ======================================================================
     // ======== New local attribute creation - w/o evolution ================
     // ======================================================================
@@ -420,6 +516,27 @@ public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>, D
         return attribute;
     }
 
+    /**
+     * Creates and insert a standard cluster attribute in this graph. If an
+     * attribute with the same id already exists in this graph, throws and
+     * exception. Attributes created locally are inaccessible at higher levels
+     * of the hierarchy and override higher level attributes with the same id.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attribute the standard attribute.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public <T> DyClusterAttribute<T> newLocalClusterAttribute(StdAttribute attribute, T defaultValue) {
+        return newLocalClusterAttribute(attribute.name(), defaultValue);
+    }
+
+    @Override
+    public <T> DyClusterAttribute<T> newLocalClusterAttribute(String attrId, T defaultValue) {
+        DyClusterAttribute<T> attribute = new DyClusterAttribute<>(defaultValue);
+        setLocalAttribute(Attribute.Type.cluster, attrId, attribute);
+        return attribute;
+    }
     // ======================================================================
     // ======== Dynamic only-methods ========================================
     // ======================================================================
@@ -443,9 +560,15 @@ public class DyGraph extends GraphWithAttributes<DyGraph, DyGraphAttribute<?>, D
                 snapshot.add(edge);
             }
         }
+        for(Cluster cluster : clusters()) {
+            if (this.<Boolean>clusterAttribute(StdAttribute.dyPresence).get(cluster).valueAt(time)) {
+                snapshot.add(cluster);
+            }
+        }
         snapAttributes(snapshot, time, graphAttributes());
         snapAttributes(snapshot, time, nodeAttributes());
         snapAttributes(snapshot, time, edgeAttributes());
+        snapAttributes(snapshot, time, clusterAttributes());
         return snapshot;
     }
 

@@ -28,13 +28,16 @@ import java.util.Set;
  * @param <U> the kind of graph attribute used.
  * @param <V> the kind of node attribute used.
  * @param <Z> the kind of edge attribute used.
+ * @param <C> the kind of cluster attribute used.
  */
-public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V, Z>, U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>>
+public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V, Z, C>,
+        U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>, C extends ClusterAttribute<?>>
         extends GraphWithHierarchy<G> {
 
     private final Map<String, U> graphAttributeMap = new HashMap<>();
     private final Map<String, V> nodeAttributeMap = new HashMap<>();
     private final Map<String, Z> edgeAttributeMap = new HashMap<>();
+    private final Map<String, C> clusterAttributeMap = new HashMap<>();
 
     private final Set<Observer.LocalAttributeList> attributesObservers = new HashSet<>();
     private final Set<Attribute<?>> changedAttributes = new HashSet<>();
@@ -106,6 +109,23 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
         return attribute(Attribute.Type.edge, attrId);
     }
 
+    /**
+     * Returns the cluster attribute with given id. It returns the first attribute
+     * with given id in the path from this graph and its root in the graph
+     * hierarchy. If called on a standard attribute that does not exists, it
+     * creates the attribute rather than throwing an exception.
+     *
+     * @param <T> the type of value handled by the attribute.
+     * @param attrId the attribute id.
+     * @return the attribute.
+     */
+    public <T> Attribute<?> clusterAttribute(String attrId) {
+        if (!hasClusterAttribute(attrId)) {
+            StdAttribute.createStdClusterAttribute(this, attrId);
+        }
+        return attribute(Attribute.Type.cluster, attrId);
+    }
+
     // ======================================================================
     // ======== New attribute creation ======================================
     // ======================================================================
@@ -142,6 +162,17 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
      * @return the new attribute.
      */
     public abstract <T> Z newEdgeAttribute(String attrId, T defaultValue);
+
+    /**
+     * Creates and inserts a cluster attribute in the root graph. If an attribute
+     * with the same id already exists in the hierarchy, throws and exception.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attrId the attribute id.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public abstract <T> C newClusterAttribute(String attrId, T defaultValue);
 
     // ======================================================================
     // ======== New local attribute creation ================================
@@ -186,6 +217,19 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
      * @return the new attribute.
      */
     public abstract <T> Z newLocalEdgeAttribute(String attrId, T defaultValue);
+
+    /**
+     * Creates and insert a cluster attribute in this graph. If an attribute with
+     * the same id already exists in this graph, throws and exception.
+     * Attributes created locally are inaccessible at higher levels of the
+     * hierarchy and override higher level attributes with the same id.
+     *
+     * @param <T> the type of values accepted in the attribute.
+     * @param attrId the attribute id.
+     * @param defaultValue the default value.
+     * @return the new attribute.
+     */
+    public abstract <T> C newLocalClusterAttribute(String attrId, T defaultValue);
 
     // ======================================================================
     // ======== Access to the attribute collections =========================
@@ -234,6 +278,15 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
     }
 
     /**
+     * Returns all the cluster attributes in the graph hierarchy.
+     *
+     * @return the edge attributes.
+     */
+    public Map<String, ClusterAttribute<?>> clusterAttributes() {
+        return attributes(Attribute.Type.cluster);
+    }
+
+    /**
      * Returns all the local attributes of a given type.
      *
      * @param <T> the type of attribute returned.
@@ -270,6 +323,15 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
      */
     public Map<String, EdgeAttribute<?>> localEdgeAttributes() {
         return localAttributes(Attribute.Type.edge);
+    }
+
+    /**
+     * Returns all the local cluster attributes.
+     *
+     * @return the local edge attributes.
+     */
+    public Map<String, ClusterAttribute<?>> localClusterAttributes() {
+        return localAttributes(Attribute.Type.cluster);
     }
 
     // ======================================================================
@@ -345,6 +407,26 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
      */
     public boolean hasEdgeAttribute(StdAttribute attribute) {
         return hasEdgeAttribute(attribute.name());
+    }
+
+    /**
+     * Checks if the graph hierarchy has a cluster attribute with given id.
+     *
+     * @param attrId the attribute id.
+     * @return true if the attribute exists, false otherwise.
+     */
+    public boolean hasClusterAttribute(String attrId) {
+        return hasAttribute(Attribute.Type.edge, attrId);
+    }
+
+    /**
+     * Checks if the graph hierarchy has a standard cluster attribute defined.
+     *
+     * @param attribute the standard attribute.
+     * @return true if the attribute exists, false otherwise.
+     */
+    public boolean hasClusterAttribute(StdAttribute attribute) {
+        return hasClusterAttribute(attribute.name());
     }
 
     // ======================================================================
@@ -423,6 +505,27 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
      */
     public boolean hasLocalEdgeAttribute(StdAttribute attribute) {
         return hasLocalEdgeAttribute(attribute.name());
+    }
+
+    /**
+     * Checks if this graph has a local cluster attribute with given id.
+     *
+     * @param attrId the attribute id.
+     * @return true if the attribute exists, false otherwise.
+     */
+    public boolean hasLocalClusterAttribute(String attrId) {
+        return hasLocalAttribute(Attribute.Type.cluster, attrId);
+    }
+
+    /**
+     * Checks if the graph hierarchy has a local standard cluster attribute
+     * defined.
+     *
+     * @param attribute the standard attribute.
+     * @return true if the attribute exists, false otherwise.
+     */
+    public boolean hasLocalClusterAttribute(StdAttribute attribute) {
+        return hasLocalClusterAttribute(attribute.name());
     }
 
     // ======================================================================
@@ -514,6 +617,28 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
      */
     public void removeEdgeAttribute(StdAttribute attribute) {
         removeEdgeAttribute(attribute.name());
+    }
+
+    /**
+     * Removes an edge attribute with given id. It removes the first attribute
+     * with given id in the path from this graph and its root in the graph
+     * hierarchy. If such attribute does not exist, throws an exception.
+     *
+     * @param attrId the attribute id.
+     */
+    public void removeClusterAttribute(String attrId) {
+        removeAttribute(Attribute.Type.cluster, attrId);
+    }
+
+    /**
+     * Removes a standard edge attribute. It removes the first attribute with
+     * given id in the path from this graph and its root in the graph hierarchy.
+     * If such attribute does not exist, throws an exception.
+     *
+     * @param attribute the standard attribute.
+     */
+    public void removeClusterAttribute(StdAttribute attribute) {
+        removeClusterAttribute(attribute.name());
     }
 
     // ======================================================================

@@ -5,10 +5,7 @@
  */
 package ocotillo.graph;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A graph that can be inserted in a hierarchy.
@@ -170,6 +167,11 @@ public abstract class GraphWithHierarchy<T extends GraphWithHierarchy<?>> extend
             } while (rootGraph().hasEdge(id));
         }
         return super.newEdge(id, source, target);
+    }
+
+    @Override
+    public Cluster newCluster(Node pole, List<Node> members) {
+        return super.newCluster(pole, members);
     }
 
     @Override
