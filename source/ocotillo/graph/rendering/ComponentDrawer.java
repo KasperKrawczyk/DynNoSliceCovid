@@ -61,6 +61,28 @@ public class ComponentDrawer {
      * @param graphics2D the graphics.
      * @param center the ellipse center.
      * @param size the ellipse size.
+     * @param circumferenceColor the ellipse stroke color.
+     * @param width the ellipse width.
+     */
+    public static void drawEllipseWithStroke(Graphics2D graphics2D,
+                                                    Coordinates center, Coordinates size, Color circumferenceColor,
+                                                    double width) {
+
+
+        Graphics2D graphicsCopy = (Graphics2D) graphics2D.create();
+        graphicsCopy.setPaint(circumferenceColor);
+        graphicsCopy.setStroke(new BasicStroke((float) (width * scaling)));
+        Coordinates leftBottom = new Coordinates(center.x() - size.x() / 2, -center.y() - size.y() / 2);
+        graphicsCopy.fill(new Ellipse2D.Double(leftBottom.x() * scaling, leftBottom.y() * scaling, size.x() * scaling, size.y() * scaling));
+        graphicsCopy.dispose();
+    }
+
+    /**
+     * Draws an ellipse in the given graphics.
+     *
+     * @param graphics2D the graphics.
+     * @param center the ellipse center.
+     * @param size the ellipse size.
      * @param fillColor the ellipse fill color.
      */
     public static void drawEllipse(Graphics2D graphics2D, Coordinates center, Coordinates size, Color fillColor) {

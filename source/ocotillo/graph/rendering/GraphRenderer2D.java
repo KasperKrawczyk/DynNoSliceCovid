@@ -22,15 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import ocotillo.geometry.Box;
 import ocotillo.geometry.Coordinates;
-import ocotillo.graph.Edge;
-import ocotillo.graph.EdgeAttribute;
-import ocotillo.graph.Graph;
-import ocotillo.graph.Node;
-import ocotillo.graph.NodeAttribute;
-import ocotillo.graph.StdAttribute;
+import ocotillo.graph.*;
 import ocotillo.graph.StdAttribute.ControlPoints;
 import ocotillo.graph.StdAttribute.EdgeShape;
 import ocotillo.graph.StdAttribute.NodeShape;
+import ocotillo.graph.StdAttribute.ClusterShape;
 import ocotillo.graph.layout.Layout2D;
 import ocotillo.graph.rendering.svg.SvgElement;
 
@@ -52,6 +48,9 @@ public class GraphRenderer2D extends GraphRenderer {
     private final EdgeAttribute<StdAttribute.EdgeShape> edgeShapes;
     private final EdgeAttribute<StdAttribute.ControlPoints> edgePoints;
     private final EdgeAttribute<Color> edgeColors;
+    private final ClusterAttribute<Double> clusterWidths;
+    private final ClusterAttribute<Color> clusterColors;
+    private final ClusterAttribute<StdAttribute.ClusterShape> clusterShapes;
     private final HeatMap heatMap;
 
     /**
@@ -76,6 +75,10 @@ public class GraphRenderer2D extends GraphRenderer {
         this.edgePoints = graph.edgeAttribute(StdAttribute.edgePoints);
         this.edgeColors = graph.edgeAttribute(StdAttribute.color);
 
+        this.clusterWidths = graph.clusterAttribute(StdAttribute.clusterWidth);
+        this.clusterShapes = graph.clusterAttribute(StdAttribute.clusterShape);
+        this.clusterColors = graph.clusterAttribute(StdAttribute.color);
+
         this.heatMap = new HeatMap();
     }
 
@@ -85,6 +88,7 @@ public class GraphRenderer2D extends GraphRenderer {
         drawHeatMap(graphics);
         drawEdges(graphics);
         drawNodes(graphics);
+        drawClusters(graphics);
     }
 
     /**
@@ -156,6 +160,33 @@ public class GraphRenderer2D extends GraphRenderer {
             switch (shape) {
                 case polyline:
                     ComponentDrawer.drawPolyline(graphics2D, startingPoint, endingPoint, controlPoints, width, color);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("The shape " + shape.name() + " is not supported");
+            }
+        }
+    }
+
+    /**
+     * Draws the graph clusters.
+     *
+     * @param graphics2D the 2D graphics.
+     */
+    private void drawClusters(Graphics2D graphics2D) {
+        for(Cluster cluster : new ArrayList<>(graph.clusters())) {
+
+            Double width = clusterWidths.get(cluster);
+            ClusterShape shape = clusterShapes.get(cluster);
+            Color color = clusterColors.get(cluster);
+
+            Coordinates center = nodePositions.get(cluster.pole());
+
+            Edge basicEdge = graph.betweenEdge(cluster.pole(), cluster.members().get(0));
+            Coordinates size = nodePositions.get(basicEdge.target());
+
+            switch (shape) {
+                case ellipse:
+                    ComponentDrawer.drawEllipseWithStroke(graphics2D, center, size, color, width);
                     break;
                 default:
                     throw new UnsupportedOperationException("The shape " + shape.name() + " is not supported");

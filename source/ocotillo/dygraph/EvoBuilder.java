@@ -312,11 +312,6 @@ public class EvoBuilder {
 
         @Override
         public Builder<ClusterShape> withRect(Interval interval, ClusterShape leftValue, ClusterShape rightValue, Interpolation interpolation) {
-            return null;
-        }
-
-        @Override
-        public Builder<EdgeShape> withRect(Interval interval, EdgeShape leftValue, EdgeShape rightValue, Interpolation interpolation) {
             evolution.insert(new FunctionRect.ClusterShape(interval, leftValue, rightValue, interpolation));
             return this;
         }
