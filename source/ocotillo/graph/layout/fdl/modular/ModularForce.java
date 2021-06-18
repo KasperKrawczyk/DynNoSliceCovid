@@ -92,8 +92,8 @@ public abstract class ModularForce extends ModularElement {
         Coordinates nPos = mirrorPositions().get(node);
         Coordinates ePos = Layout2D.closestEdgePoint(mirrorGraph(), nPos, edge, mirrorPositions(), null, null);
         double distanceAtZeroSize = Geom.e2D.magnitude(nPos.restrMinus(ePos, 2));
-        double distanceAtFullZize = Layout2D.nodeEdgeGlyphDistance(mirrorGraph(), node, edge, mirrorPositions(), mirrorSizes, mirrorShapes, mirrorEdgeWidths, null, null);
-        double elemRadiusAtFullSize = distanceAtZeroSize - distanceAtFullZize;
+        double distanceAtFullSize = Layout2D.nodeEdgeGlyphDistance(mirrorGraph(), node, edge, mirrorPositions(), mirrorSizes, mirrorShapes, mirrorEdgeWidths, null, null);
+        double elemRadiusAtFullSize = distanceAtZeroSize - distanceAtFullSize;
         double currentElemRadius = elemRadiusAtFullSize * (1 - temperature);
         double currentDistance = distanceAtZeroSize - currentElemRadius;
         double desiredDistance = desiredDistance() + elemRadiusAtFullSize;

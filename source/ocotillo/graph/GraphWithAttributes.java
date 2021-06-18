@@ -416,7 +416,7 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
      * @return true if the attribute exists, false otherwise.
      */
     public boolean hasClusterAttribute(String attrId) {
-        return hasAttribute(Attribute.Type.edge, attrId);
+        return hasAttribute(Attribute.Type.cluster, attrId);
     }
 
     /**
@@ -701,6 +701,8 @@ public abstract class GraphWithAttributes<G extends GraphWithAttributes<G, U, V,
                 return nodeAttributeMap;
             case edge:
                 return edgeAttributeMap;
+            case cluster:
+                return clusterAttributeMap;
             default:
                 throw new UnsupportedOperationException("The attribute type " + type.name() + " is not supported");
         }

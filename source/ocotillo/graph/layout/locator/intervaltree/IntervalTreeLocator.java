@@ -45,7 +45,7 @@ public class IntervalTreeLocator extends ElementLocatorAbst {
     private Observer.ElementAttributeChanges<Node> nodePositionObserver;
     private Observer.ElementAttributeChanges<Node> nodeSizeObserver;
     private Observer.ElementAttributeChanges<Edge> edgePointsObserver;
-    private Observer.ElementAttributeChanges<Edge> edgeWitdhObserver;
+    private Observer.ElementAttributeChanges<Edge> edgeWidthObserver;
 
     /**
      * Builder for interval tree locator.
@@ -134,7 +134,7 @@ public class IntervalTreeLocator extends ElementLocatorAbst {
             nodePositionObserver = new NodePositionObserver(nodePositions);
             nodeSizeObserver = new NodeSizeObserver(nodeSizes);
             edgePointsObserver = new EdgeAttributeObserver(edgePoints);
-            edgeWitdhObserver = new EdgeAttributeObserver(edgeWidths);
+            edgeWidthObserver = new EdgeAttributeObserver(edgeWidths);
         }
     }
 
@@ -231,7 +231,7 @@ public class IntervalTreeLocator extends ElementLocatorAbst {
             nodePositionObserver.unregister();
             nodeSizeObserver.unregister();
             edgePointsObserver.unregister();
-            edgeWitdhObserver.unregister();
+            edgeWidthObserver.unregister();
         }
     }
 

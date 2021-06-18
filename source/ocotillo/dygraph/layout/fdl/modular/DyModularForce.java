@@ -28,9 +28,7 @@ import ocotillo.geometry.Coordinates;
 import ocotillo.geometry.Geom;
 import ocotillo.geometry.GeomE.PointRelation;
 import ocotillo.geometry.Interval;
-import ocotillo.graph.Edge;
-import ocotillo.graph.Node;
-import ocotillo.graph.NodeAttribute;
+import ocotillo.graph.*;
 import ocotillo.graph.extra.BendExplicitGraphSynchroniser.MirrorEdge;
 import ocotillo.graph.layout.fdl.modular.ModularForce;
 import ocotillo.structures.IntervalTree;
@@ -517,6 +515,76 @@ public abstract class DyModularForce extends ModularForce {
          */
         protected double computeExponent() {
             return finalExponent + (initialExponent - finalExponent) * temperature();
+        }
+    }
+
+    public static class PoleAttraction extends DyModularForce { //TODO possibly remove if ModularConstraint is successful
+
+        public double initialExponent = 1;
+        public double finalExponent = 3;
+        /**
+         * Used to determine the distance of the repulsion boundary from the pole node
+         * Prevents the cluster members clustering too densely
+         */
+        public double repulsionFactor = 50;
+
+        protected final double desiredDistance;
+        private NodeAttribute<Coordinates> forces;
+
+        /**
+         * Builds an edge repulsion force.
+         *
+         * @param desiredDistance the ideal edge distance.
+         */
+        public PoleAttraction(double desiredDistance) {
+            this.desiredDistance = desiredDistance;
+        }
+
+        @Override
+        protected NodeAttribute<Coordinates> computeForces() {
+            forces = new NodeAttribute<>(new Coordinates(0, 0, 0));
+
+            for(Cluster cluster : mirrorGraph().clusters()){
+                Coordinates poleCoordinates = mirrorPositions().get(cluster.pole());
+
+                for (Node memberNode : cluster.members()) {
+                    Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(memberNode))).timesIP(repulsionFactor);
+                    forces.set(memberNode, force);
+//                    Coordinates memberCoordinates = mirrorPositions().get(memberNode);
+//                    Coordinates poleToMember = poleCoordinates.minus(memberCoordinates); // direction
+//                    double radiusMagnitude  = computeRadius(poleCoordinates);
+//                    double poleToMemberMagnitude = Geom.e3D.magnitude(poleToMember);
+//                    double magnitudesScale = radiusMagnitude / poleToMemberMagnitude;
+//                    Coordinates repulsionPoint = Geom.e3D.scaleVector(poleToMember, magnitudesScale);
+//                    Coordinates force = repulsionPoint.plus(memberCoordinates.times(repulsionFactor)).minus();
+//                    forces.set(memberNode, force);
+
+                }
+            }
+
+            return forces;
+        }
+
+        /**
+         * Computes coordinates of a point on the cluster's circumference
+         * which will repulse a member node towards the centre
+         * @param poleCoordinates cluster centre coordinates
+         * @param memberCoordinates member coordinates
+         * @return
+         */
+        protected Coordinates computeRepulsionPoint(Coordinates poleCoordinates, Coordinates memberCoordinates){
+            Coordinates direction = poleCoordinates.minus(memberCoordinates);
+            double radiusXSquared = Math.pow(poleCoordinates.x() + 18, 2);
+            double radiusYSquared = Math.pow(poleCoordinates.y() + 18, 2);
+            double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
+            return new Coordinates(poleCoordinates.x() + radiusLength, poleCoordinates.y() + radiusLength);
+        }
+
+        protected double computeRadius(Coordinates poleCoordinates){
+            double radiusXSquared = Math.pow(poleCoordinates.x() + 18, 2);
+            double radiusYSquared = Math.pow(poleCoordinates.y() + 18, 2);
+            double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
+            return radiusLength;
         }
     }
 }

@@ -17,14 +17,9 @@ package ocotillo.serialization.oco;
 
 import java.io.File;
 import java.util.List;
-import ocotillo.dygraph.DyEdgeAttribute;
-import ocotillo.dygraph.DyGraph;
-import ocotillo.dygraph.DyGraphAttribute;
-import ocotillo.dygraph.DyNodeAttribute;
-import ocotillo.graph.EdgeAttribute;
-import ocotillo.graph.Graph;
-import ocotillo.graph.GraphAttribute;
-import ocotillo.graph.NodeAttribute;
+
+import ocotillo.dygraph.*;
+import ocotillo.graph.*;
 import ocotillo.serialization.ParserTools;
 
 /**
@@ -64,7 +59,7 @@ public class OcoSerializer {
      * @return the generated graph.
      */
     public Graph readStatic(List<String> lines) {
-        OcoReader<Graph, GraphAttribute<?>, NodeAttribute<?>, EdgeAttribute<?>> reader
+        OcoReader<Graph, GraphAttribute<?>, NodeAttribute<?>, EdgeAttribute<?>, ClusterAttribute<?>> reader
                 = new OcoReader<>(staticConverters, () -> new Graph(), "graph");
         return reader.read(lines);
     }
@@ -76,7 +71,7 @@ public class OcoSerializer {
      * @return the generated graph.
      */
     public DyGraph readDynamic(List<String> lines) {
-        OcoReader<DyGraph, DyGraphAttribute<?>, DyNodeAttribute<?>, DyEdgeAttribute<?>> reader
+        OcoReader<DyGraph, DyGraphAttribute<?>, DyNodeAttribute<?>, DyEdgeAttribute<?>, DyClusterAttribute<?>> reader
                 = new OcoReader<>(dynamicConverters, () -> new DyGraph(), "dygraph");
         return reader.read(lines);
     }

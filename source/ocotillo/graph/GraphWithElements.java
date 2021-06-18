@@ -26,6 +26,7 @@ public class GraphWithElements {
     private final Map<String, Node> nodeMap = new HashMap<>();
     private final Map<String, Edge> edgeMap = new HashMap<>();
     private final Map<String, Cluster> clusterMap = new HashMap<>();
+    private final List<Node> poleList = new ArrayList<>();
 
     private final Map<Node, Set<Edge>> incomingMap = new HashMap<>();
     private final Map<Node, Set<Edge>> outgoingMap = new HashMap<>();
@@ -183,6 +184,15 @@ public class GraphWithElements {
     }
 
     /**
+     * Returns the clusters' poles.
+     *
+     * @return the graph nodes.
+     */
+    public Collection<Node> poles() {
+        return Collections.unmodifiableCollection(poleList);
+    }
+
+    /**
      * Creates and inserts a new cluster.
      *
      * @param pole the centre node of the cluster
@@ -192,6 +202,7 @@ public class GraphWithElements {
     public Cluster newCluster(Node pole, List<Node> members) {
 
         Cluster cluster = new Cluster(pole, members);
+        poleList.add(pole);
         add(cluster);
         return cluster;
     }
@@ -207,9 +218,9 @@ public class GraphWithElements {
     }
 
     /**
-     * Returns a node with given id.
+     * Returns a cluster with given id.
      *
-     * @param id the node id.
+     * @param id the center node id.
      * @return the cluster having given id.
      */
     public Cluster getCluster(String id) {

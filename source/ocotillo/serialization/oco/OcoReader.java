@@ -17,14 +17,8 @@ package ocotillo.serialization.oco;
 
 import java.util.LinkedList;
 import java.util.List;
-import ocotillo.graph.Edge;
-import ocotillo.graph.EdgeAttribute;
-import ocotillo.graph.GraphAttribute;
-import ocotillo.graph.GraphWithAttributes;
-import ocotillo.graph.Node;
-import ocotillo.graph.NodeAttribute;
-import ocotillo.graph.Rules;
-import ocotillo.graph.StdAttribute;
+
+import ocotillo.graph.*;
 
 /**
  * Reader for oco files.
@@ -33,11 +27,13 @@ import ocotillo.graph.StdAttribute;
  * @param <U> the type of associated graph attribute.
  * @param <V> the type of associated node attribute.
  * @param <Z> the type of associated edge attribute
+ * @param <C> the type of associated cluster attribute
  */
-public class OcoReader<T extends GraphWithAttributes<T, U, V, Z>, U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>> {
+public class OcoReader<T extends GraphWithAttributes<T, U, V, Z, C>,
+        U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>, C extends ClusterAttribute<?>> {
 
     private final OcoConverterSet converters;
-    private final GraphGenerator<T, U, V, Z> generator;
+    private final GraphGenerator<T, U, V, Z, C> generator;
     private final String graphHeader;
 
     /**
@@ -47,7 +43,7 @@ public class OcoReader<T extends GraphWithAttributes<T, U, V, Z>, U extends Grap
      * @param generator the graph generator.
      * @param graphHeader the header used to identify this king of graph in oco.
      */
-    protected OcoReader(OcoConverterSet converters, GraphGenerator<T, U, V, Z> generator, String graphHeader) {
+    protected OcoReader(OcoConverterSet converters, GraphGenerator<T, U, V, Z, C> generator, String graphHeader) {
         this.converters = converters;
         this.generator = generator;
         this.graphHeader = graphHeader;
@@ -61,7 +57,8 @@ public class OcoReader<T extends GraphWithAttributes<T, U, V, Z>, U extends Grap
      * @param <V> the type of associated node attribute.
      * @param <Z> the type of associated edge attribute
      */
-    protected static interface GraphGenerator<T extends GraphWithAttributes<T, U, V, Z>, U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>> {
+    protected static interface GraphGenerator<T extends GraphWithAttributes<T, U, V, Z, C>,
+            U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>, C extends ClusterAttribute<?>> {
 
         public T newGraph();
     }
@@ -178,8 +175,9 @@ public class OcoReader<T extends GraphWithAttributes<T, U, V, Z>, U extends Grap
      * @param graphLevel the desired graph level.
      * @return the created graph.
      */
-    private static <T extends GraphWithAttributes<T, U, V, Z>, U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>>
-            T createGraphAtLevel(LinkedList<T> graphStack, int graphLevel, GraphGenerator<T, U, V, Z> generator) {
+    private static <T extends GraphWithAttributes<T, U, V, Z, C>,
+            U extends GraphAttribute<?>, V extends NodeAttribute<?>, Z extends EdgeAttribute<?>, C extends ClusterAttribute<?>>
+            T createGraphAtLevel(LinkedList<T> graphStack, int graphLevel, GraphGenerator<T, U, V, Z, C> generator) {
         if (graphLevel == 0) {
             graphStack.push(generator.newGraph());
         } else {

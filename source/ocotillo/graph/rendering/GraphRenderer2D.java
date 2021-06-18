@@ -181,12 +181,12 @@ public class GraphRenderer2D extends GraphRenderer {
 
             Coordinates center = nodePositions.get(cluster.pole());
 
-            Edge basicEdge = graph.betweenEdge(cluster.pole(), cluster.members().get(0));
-            Coordinates size = nodePositions.get(basicEdge.target());
+            //Edge basicEdge = graph.betweenEdge(cluster.pole(), cluster.members().get(0));
+            //Coordinates size = nodePositions.get(basicEdge.target());
 
             switch (shape) {
                 case ellipse:
-                    ComponentDrawer.drawEllipseWithStroke(graphics2D, center, size, color, width);
+                    ComponentDrawer.drawEllipseWithStroke(graphics2D, center, null, color, width);
                     break;
                 default:
                     throw new UnsupportedOperationException("The shape " + shape.name() + " is not supported");

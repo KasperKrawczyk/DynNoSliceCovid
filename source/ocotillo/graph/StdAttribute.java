@@ -70,7 +70,7 @@ public enum StdAttribute {
             Arrays.asList(graphics, background),
             Arrays.asList(nodePosition, nodeSize, nodeShape, nodeHeat, color, label, labelColor, labelScaling, labelOffset),
             Arrays.asList(edgeWidth, edgeShape, edgePoints, color),
-            Arrays.asList(clusterWidth, clusterShape));
+            Arrays.asList(clusterWidth, clusterShape, color));
 
     /**
      * Collects the attributes that are reserved for dynamic graphs.
@@ -307,7 +307,15 @@ public enum StdAttribute {
                 break;
             case clusterShape:
                 createdAttribute = graph.newClusterAttribute(attrId, ClusterShape.ellipse);
-                createdAttribute.setDescription("The type of the cluster.");
+                createdAttribute.setDescription("The shape of the cluster.");
+                break;
+            case color:
+                createdAttribute = graph.newClusterAttribute(attrId, new Color(141, 211, 199));
+                createdAttribute.setDescription("The stroke color of the clusters.");
+                break;
+            case dyPresence:
+                createdAttribute = graph.newClusterAttribute(attrId, true);
+                createdAttribute.setDescription("Dynamic presence in the graph.");
                 break;
             default:
                 return null;

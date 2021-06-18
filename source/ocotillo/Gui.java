@@ -77,12 +77,6 @@ public class Gui extends JFrame {
         header.add(Box.createRigidArea(new Dimension(15, 15)));
         add(header);
 
-//        String[] comboBoxOptions = {"one", "two", "three"};
-//        JComboBox<String> comboBox = new JComboBox<>(comboBoxOptions);
-//        comboBox.setBackground(covidComboBoxColour);
-//        header.add(comboBox);
-
-
 
         add(Box.createRigidArea(new Dimension(15, 15)));
         add(tabbedPane);
@@ -1233,7 +1227,7 @@ public class Gui extends JFrame {
         @Override
         protected SpaceTimeCubeSynchroniser getSynchro() throws NoSuchElementException{
             DyGraph graph = covidExperiment.getContinuousCopyWithMultipleLocationsAttraction(selectedLocationsList);
-            DyModularFdl algorithm = experiment.getContinuousLayoutAlgorithm(graph, null);
+            DyModularFdl algorithm = experiment.getContinuousLayoutAlgorithmCovid(graph, null);
             SpaceTimeCubeSynchroniser synchro = algorithm.getSyncro();
             ModularStatistics stats = algorithm.iterate(100);
             String time = stats.getTotalRunnningTime().getSeconds() + "."

@@ -32,12 +32,7 @@ import ocotillo.dygraph.rendering.Animation;
 import ocotillo.geometry.Coordinates;
 import ocotillo.geometry.Geom;
 import ocotillo.geometry.Interval;
-import ocotillo.graph.Edge;
-import ocotillo.graph.EdgeAttribute;
-import ocotillo.graph.Graph;
-import ocotillo.graph.Node;
-import ocotillo.graph.NodeAttribute;
-import ocotillo.graph.StdAttribute;
+import ocotillo.graph.*;
 import ocotillo.graph.StdAttribute.ControlPoints;
 import ocotillo.graph.extra.GraphMetric;
 import ocotillo.graph.layout.fdl.modular.ModularConstraint;
@@ -145,6 +140,34 @@ public abstract class Experiment {
                 .withConstraint(new ModularConstraint.DecreasingMaxMovement(2 * delta))
                 .withConstraint(new ModularConstraint.MovementAcceleration(2 * delta, Geom.e3D))
                 .withPostProcessing(new DyModularPostProcessing.FlexibleTimeTrajectories(delta * 1.5, delta * 2.0, Geom.e3D));
+
+        if (postProcessing != null) {
+            builder.withPostProcessing(postProcessing);
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Builds the layout algorithm for the given dynamic graph.
+     *
+     * @param dynamicGraph the dynamic graph.
+     * @param postProcessing eventual post processing.
+     * @return the graph drawing algorithm.
+     */
+    public DyModularFdl getContinuousLayoutAlgorithmCovid(DyGraph dynamicGraph, ModularPostProcessing postProcessing) {
+
+        DyModularFdl.DyModularFdlBuilder builder = new DyModularFdl.DyModularFdlBuilder(dynamicGraph, dataset.suggestedTimeFactor)
+                .withForce(new DyModularForce.TimeStraightning(delta))
+                .withForce(new DyModularForce.Gravity())
+                .withForce(new DyModularForce.ConnectionAttraction(delta))
+                .withForce(new DyModularForce.EdgeRepulsion(delta))
+                .withForce(new DyModularForce.PoleAttraction(delta)) // TODO possibly remove if a new .withConstraint() is successful
+                .withConstraint(new ModularConstraint.DecreasingMaxMovement(2 * delta))
+                .withConstraint(new ModularConstraint.MovementAcceleration(2 * delta, Geom.e3D))
+                .withConstraint(new ModularConstraint.PinnedNodes(dynamicGraph.poles()))
+                .withPostProcessing(new DyModularPostProcessing.FlexibleTimeTrajectories(delta * 1.5, delta * 2.0, Geom.e3D))
+                .withConstraint(new ModularConstraint.PinnedNodes(dynamicGraph.poles()));
 
         if (postProcessing != null) {
             builder.withPostProcessing(postProcessing);

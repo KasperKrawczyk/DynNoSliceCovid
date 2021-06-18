@@ -1,14 +1,20 @@
 package ocotillo.graph;
 
 import lombok.*;
+import ocotillo.geometry.*;
 
 import java.util.*;
 
 @EqualsAndHashCode(callSuper = true)
 public class Cluster extends Element{
 
+    /**
+     * Experimentally established factor used in determining the radius of the cluster's circle
+     */
+    private static final double RADIUS_FACTOR = 2.25;
     private final Node pole;
     private final List<Node> membersList;
+    private Coordinates radius;
 
     /**
      * Constructs a cluster. Pole's id gets assigned as the cluster's id
@@ -41,6 +47,20 @@ public class Cluster extends Element{
     }
 
     /**
+     * Add a member to the members list of the cluster
+     */
+    public void addMember(Node node){
+        membersList.add(node);
+    }
+
+    /**
+     * Add a list of members to the members list of the cluster
+     */
+    public void addMembers(List<Node> nodesList){
+        membersList.addAll(nodesList);
+    }
+
+    /**
      * Checks if a node is a member of the cluster
      *
      * @param node the node
@@ -59,4 +79,17 @@ public class Cluster extends Element{
     public boolean isNodePole(Node node){
         return this.pole.equals(node);
     }
+
+    public void setRadius(){
+        double radiusCoordinatesScalar = this.members().size() * Cluster.RADIUS_FACTOR;
+        this.radius = new Coordinates(radiusCoordinatesScalar, radiusCoordinatesScalar);
+    }
+
+//    public Coordinates getRadius(Graph graph){
+//        Node initRadiusNode = this.membersList.get(0);
+//        Coordinates radius = graph.nodeAttribute(initRadiusNode.id(), Coordinates)
+//        graph.nodeAttribute()
+//    }
+
+
 }

@@ -4,9 +4,7 @@ import com.sun.xml.internal.bind.v2.*;
 import ocotillo.dygraph.*;
 import ocotillo.geometry.Coordinates;
 import ocotillo.geometry.Interval;
-import ocotillo.graph.Edge;
-import ocotillo.graph.Node;
-import ocotillo.graph.StdAttribute;
+import ocotillo.graph.*;
 import ocotillo.samples.parsers.Commons.DyDataSet;
 import ocotillo.samples.parsers.Commons.Mode;
 
@@ -900,34 +898,46 @@ public class CovidTransmission {
         DyNodeAttribute<String> label = graph.nodeAttribute(StdAttribute.label);
         DyNodeAttribute<Coordinates> position = graph.nodeAttribute(StdAttribute.nodePosition);
         DyNodeAttribute<Color> color = graph.nodeAttribute(StdAttribute.color);
-        DyNodeAttribute<Coordinates> size = graph.nodeAttribute(StdAttribute.nodeSize);
 
         DyEdgeAttribute<Boolean> edgePresence = graph.edgeAttribute(StdAttribute.dyPresence);
         DyEdgeAttribute<Color> edgeColor = graph.edgeAttribute(StdAttribute.color);
         DyEdgeAttribute<Double> edgeStrength = graph.newEdgeAttribute("Strength", 0.0);
 
+        DyClusterAttribute<Boolean> clusterPresence = graph.clusterAttribute(StdAttribute.dyPresence);
+        DyClusterAttribute<Color> clusterColor = graph.clusterAttribute(StdAttribute.color);
+
         CovidDataSet dataset = parseCovidFilesWithLocation(infectionsFile, eventsFile, contactsFile);
         Color locationAttractionNodeColor = new Color(0, 255, 0, 255);
         Color locationAttractionEdgeColor = new Color(178, 215, 44, 109);
+        Color clusterStrokeColor = new Color(216, 239, 6, 255);
 
         HashMap<String, Node> polesHashMap = new HashMap<>();
 
         Map<Integer, Node> nodeMap = new HashMap<>();
+        Map<Node, Cluster> clusterMap = new HashMap<>();
 
         int polesIDCounter = 0;
 
         //create poles
         for(String location : selectedLocationsList){
             polesIDCounter--;
-            Node origin = graph.newNode("" + location);
-            presence.set(origin, new Evolution<>(false));
-            label.set(origin, new Evolution<>(location));
-            position.set(origin, new Evolution<>(new Coordinates(0, 0)));
-            color.set(origin, new Evolution<>(locationAttractionNodeColor));
-            nodeMap.put(polesIDCounter, origin);
-            polesHashMap.put(location, origin);
+            Node pole = graph.newNode("" + location);
+            presence.set(pole, new Evolution<>(false));
+            label.set(pole, new Evolution<>(location));
+            position.set(pole, new Evolution<>(new Coordinates(0, 0)));
+            color.set(pole, new Evolution<>(locationAttractionNodeColor));
+            nodeMap.put(polesIDCounter, pole);
+            polesHashMap.put(location, pole);
             Interval originInterval = Interval.newRightClosed(-1, dataset.timeSteps.length);
-            presence.get(origin).insert(new FunctionConst<>(originInterval, true));
+            presence.get(pole).insert(new FunctionConst<>(originInterval, true));
+
+
+//            Cluster cluster = graph.newCluster(pole, new ArrayList<>());
+//            clusterPresence.set(cluster, new Evolution<>(true));
+//            clusterColor.set(cluster, new Evolution<>(clusterStrokeColor));
+//            Interval clusterInterval = Interval.newRightClosed(-1, dataset.timeSteps.length);
+//            clusterPresence.get(cluster).insert(new FunctionConst<>(clusterInterval, true));
+//            clusterMap.put(pole, cluster);
         }
 
         //draw nodes, set initial node color
@@ -943,6 +953,12 @@ public class CovidTransmission {
             Interval presenceInterval = Interval.newRightClosed(person.day, dataset.timeSteps.length);
             nodeMap.put(personID, newNode);
             presence.get(newNode).insert(new FunctionConst<>(presenceInterval, true));
+
+//            Node pole = graph.getNode(person.location);
+//            if(pole != null){
+//                Cluster cluster = graph.getCluster(pole.id());
+//                cluster.addMember(newNode);
+//            }
         }
 
         //color and resize nodes
@@ -979,26 +995,40 @@ public class CovidTransmission {
         }
 
 
-        for(Person person : dataset.personsSet){
+        for (Person person : dataset.personsSet) {
             if (person.from == -1) {
                 continue;
             }
-            Node source = nodeMap.get(person.id);
-            if(polesHashMap.containsKey(person.location)){
-                System.out.println("In pole's edge creation loop: " + person);
+            Node member = nodeMap.get(person.id);
+            if (polesHashMap.containsKey(person.location)) {
+
                 Node poleNode = polesHashMap.get(person.location);
-                System.out.println("Does nodeMap contain " + poleNode + " ? " + nodeMap.containsValue(poleNode));
-                System.out.println("poleNode " + poleNode);
-                Edge locationAttractionEdge = graph.newEdge(source, poleNode);
+
+                Edge locationAttractionEdge = graph.newEdge(member, poleNode);
                 edgePresence.set(locationAttractionEdge, new Evolution<>(false));
                 edgeColor.set(locationAttractionEdge, new Evolution<>(locationAttractionEdgeColor));
-                edgeStrength.set(locationAttractionEdge, new Evolution<>(1.5));
+                //edgeStrength.set(locationAttractionEdge, new Evolution<>(2.5));
 
                 Interval transmissionInterval = Interval.newRightClosed(person.day, dataset.timeSteps.length);
                 edgePresence.get(locationAttractionEdge).insert(new FunctionConst<>(transmissionInterval, true));
-                }
 
+                Cluster cluster = graph.getCluster(poleNode.id());
+                if (cluster == null) {
+                    cluster = graph.newCluster(poleNode, new ArrayList<Node>());
+                    cluster.addMember(member);
+                    clusterPresence.set(cluster, new Evolution<>(true));
+                    clusterColor.set(cluster, new Evolution<>(clusterStrokeColor));
+                    //clusterShape.set(cluster, new Evolution<>(StdAttribute.ClusterShape.ellipse));
+                    //clusterWidth.set(cluster, new Evolution<>(1.0));
+                    Interval clusterInterval = Interval.newRightClosed(-1, dataset.timeSteps.length);
+                    clusterPresence.get(cluster).insert(new FunctionConst<>(clusterInterval, true));
+                }
+                if (!cluster.members().contains(member)) {
+                    cluster.addMember(member);
+                }
             }
+
+        }
 
 
 
@@ -1183,7 +1213,6 @@ public class CovidTransmission {
                 Interval newStatusInterval = Interval.newRightClosed(t - 0.5, t + 0.5);
                 Color newColor = dataset.timeSteps[t][person.id];
 
-
                 if(person.location.equalsIgnoreCase(location)){ // TODO test without person.location != null
                     size.set(node, new Evolution<>(new Coordinates(2, 2)));
                     color.get(node).insert(new FunctionConst<>(newStatusInterval, newColor));
@@ -1193,7 +1222,6 @@ public class CovidTransmission {
                 }
             }
         }
-
 
         //draw edges
         for (Person person : validPersons) {
@@ -1339,12 +1367,12 @@ public class CovidTransmission {
         List<CovidDyDataSet> covidDyDataSetList = new ArrayList<>();
 
         for(String selectedLocation : selectedLocations){
-            CovidDyDataSet covidDyDataSetLocation1 = new CovidDyDataSet(
+            CovidDyDataSet covidDyDataSetLocation = new CovidDyDataSet(
                     parseGraphWithLocations(infectionsFile, eventsFile, contactsFile, selectedLocation, mode),
                     5,
                     Interval.newClosed(0, dataset.personsList.size() - 1),
                     dataset.locationsSet);
-            covidDyDataSetList.add(covidDyDataSetLocation1);
+            covidDyDataSetList.add(covidDyDataSetLocation);
         }
 
 

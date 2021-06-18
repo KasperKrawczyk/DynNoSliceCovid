@@ -72,8 +72,9 @@ public class ComponentDrawer {
         Graphics2D graphicsCopy = (Graphics2D) graphics2D.create();
         graphicsCopy.setPaint(circumferenceColor);
         graphicsCopy.setStroke(new BasicStroke((float) (width * scaling)));
+        size = new Coordinates(25.0, 25.0);
         Coordinates leftBottom = new Coordinates(center.x() - size.x() / 2, -center.y() - size.y() / 2);
-        graphicsCopy.fill(new Ellipse2D.Double(leftBottom.x() * scaling, leftBottom.y() * scaling, size.x() * scaling, size.y() * scaling));
+        graphicsCopy.draw(new Ellipse2D.Double(leftBottom.x() * scaling, leftBottom.y() * scaling, size.x() * scaling, size.y() * scaling));
         graphicsCopy.dispose();
     }
 
