@@ -267,8 +267,8 @@ public class SpaceTimeCubeSynchroniser {
             this.mirrorInterval = Interval.newCustom(spaceStart, spaceEnd,
                     appearance.isLeftClosed(), appearance.isRightClosed());
 
-            mirrorSource = mirrorGraph.newNode();
-            mirrorTarget = mirrorGraph.newNode();
+            mirrorSource = mirrorGraph.newNode(original.id());
+            mirrorTarget = mirrorGraph.newNode("target" + original.id());
             mirrorEdge = mirrorGraph.newEdge(mirrorSource, mirrorTarget);
 
             Coordinates startPos = dyNodePositions.get(original).valueAt(appearance.leftBound());

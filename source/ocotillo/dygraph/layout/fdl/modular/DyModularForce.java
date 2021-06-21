@@ -15,6 +15,7 @@
  */
 package ocotillo.dygraph.layout.fdl.modular;
 
+import java.text.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -60,6 +61,43 @@ public abstract class DyModularForce extends ModularForce {
     protected SpaceTimeCubeSynchroniser stcSynchronizer() {
         assert (dyModularFdl != null) : "The ModularFdl element has not been attached yet.";
         return dyModularFdl.synchronizer;
+    }
+
+    protected double computeRadius(Coordinates poleCoordinates){
+        double radiusXSquared = Math.pow(poleCoordinates.x() + 25, 2);
+        double radiusYSquared = Math.pow(poleCoordinates.y() + 25, 2);
+        double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
+        return radiusLength;
+    }
+
+
+
+
+    /**
+     * Returns true if all three input point are collinear in 2D space (with coordinate values
+     * rounded up to two decimal places), false otherwise.
+     *
+     * @param firstPoint coordinates of the first point in 2D space
+     * @param secondPoint coordinates of the second point in 2D space
+     * @param thirdPoint coordinates of the third point in 2D space
+     * @return
+     */
+    private boolean areCollinear(Coordinates firstPoint, Coordinates secondPoint, Coordinates thirdPoint){
+        DecimalFormat df = new DecimalFormat("#.00");
+        double firstX = Double.parseDouble(df.format(firstPoint.x()));
+        double firstY = Double.parseDouble(df.format(firstPoint.x()));
+
+        double secondX = Double.parseDouble(df.format(secondPoint.x()));
+        double secondY = Double.parseDouble(df.format(secondPoint.x()));
+
+        double thirdX = Double.parseDouble(df.format(thirdPoint.x()));
+        double thirdY = Double.parseDouble(df.format(thirdPoint.x()));
+
+//            System.out.println("mirrorPoleCoordinates: x = " + firstX + " y = " + firstY);
+//            System.out.println("mirrorMemberCoordinates: x = " + secondX + " y = " + secondY);
+//            System.out.println("repulsionPoint: x = " + thirdX + " y = " + thirdY);
+
+        return (secondY - firstY) * (thirdX - secondX) == (thirdY - secondY) * (secondX - firstX);
     }
 
     /**
@@ -241,6 +279,7 @@ public abstract class DyModularForce extends ModularForce {
             if (centre == null) {
                 centre = new Coordinates(0, 0);
                 for (Node node : mirrorGraph().nodes()) {
+                    System.out.println("node id in mirrorGraph.nodes() " + node.id());
                     centre.plusIP(mirrorPositions().get(node).restr(2));
                 }
                 centre.divideIP(mirrorGraph().nodeCount());
@@ -518,7 +557,7 @@ public abstract class DyModularForce extends ModularForce {
         }
     }
 
-    public static class PoleAttraction extends DyModularForce { //TODO possibly remove if ModularConstraint is successful
+    public static class PoleAttraction extends DyModularForce {
 
         public double initialExponent = 1;
         public double finalExponent = 3;
@@ -544,20 +583,70 @@ public abstract class DyModularForce extends ModularForce {
         protected NodeAttribute<Coordinates> computeForces() {
             forces = new NodeAttribute<>(new Coordinates(0, 0, 0));
 
-            for(Cluster cluster : mirrorGraph().clusters()){
-                Coordinates poleCoordinates = mirrorPositions().get(cluster.pole());
+            for(Cluster cluster : stcSynchronizer().originalGraph().clusters()){
+
+                Node mirrorPole = mirrorGraph().getNode(cluster.pole().id());
+                Coordinates poleCoordinates = mirrorPositions().get(mirrorPole);
+
+                System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorPole = " + mirrorPole.id());
 
                 for (Node memberNode : cluster.members()) {
-                    Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(memberNode))).timesIP(repulsionFactor);
+
+                    Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
+                    Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(mirrorMemberNode))).timesIP(repulsionFactor).minus();
+                    forces.set(mirrorMemberNode, force);
+                    System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorMemberNode = " + mirrorMemberNode.id());
+                }
+            }
+
+            return forces;
+        }
+    }
+    public static class CircumferenceRepulsion extends DyModularForce {
+
+        /**
+         * Used to determine the distance of the repulsion boundary from the pole node
+         * Prevents the cluster members clustering too densely
+         */
+        public double repulsionFactor = 30;
+
+        protected final double desiredDistance;
+        private NodeAttribute<Coordinates> forces;
+
+        /**
+         * Builds a circumference repulsion force.
+         * Member nodes of this cluster will be repulsed from the edge of the circle towards the pole.
+         *
+         * @param desiredDistance the ideal edge distance.
+         */
+        public CircumferenceRepulsion(double desiredDistance) {
+            this.desiredDistance = desiredDistance;
+        }
+
+        @Override
+        protected NodeAttribute<Coordinates> computeForces() {
+            forces = new NodeAttribute<>(new Coordinates(0, 0));
+
+            for(Cluster cluster : stcSynchronizer().originalGraph().clusters()){
+
+                Node mirrorPole = mirrorGraph().getNode(cluster.pole().id());
+                Coordinates mirrorPoleCoordinates = mirrorPositions().get(mirrorPole);
+
+                //System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorPole = " + mirrorPole.id());
+
+                for (Node memberNode : cluster.members()) {
+
+                    Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
+
+                    Coordinates mirrorMemberCoordinates = mirrorPositions().get(mirrorMemberNode);
+                    Coordinates mirrorPoleToMember = mirrorPoleCoordinates.minus(mirrorMemberCoordinates); // direction
+                    double radiusMagnitude  = computeRadius(mirrorPoleCoordinates);
+                    double poleToMemberMagnitude = Geom.e3D.magnitude(mirrorPoleToMember);
+                    double magnitudesScale =  poleToMemberMagnitude / radiusMagnitude;
+                    Coordinates repulsionPoint = computeRepulsionPoint(mirrorPoleToMember, mirrorMemberCoordinates);
+                    Coordinates force = repulsionPoint.plus(mirrorMemberCoordinates.times(magnitudesScale * repulsionFactor));
                     forces.set(memberNode, force);
-//                    Coordinates memberCoordinates = mirrorPositions().get(memberNode);
-//                    Coordinates poleToMember = poleCoordinates.minus(memberCoordinates); // direction
-//                    double radiusMagnitude  = computeRadius(poleCoordinates);
-//                    double poleToMemberMagnitude = Geom.e3D.magnitude(poleToMember);
-//                    double magnitudesScale = radiusMagnitude / poleToMemberMagnitude;
-//                    Coordinates repulsionPoint = Geom.e3D.scaleVector(poleToMember, magnitudesScale);
-//                    Coordinates force = repulsionPoint.plus(memberCoordinates.times(repulsionFactor)).minus();
-//                    forces.set(memberNode, force);
+                    //System.out.println(areCollinear(mirrorPoleCoordinates, mirrorMemberCoordinates, repulsionPoint));
 
                 }
             }
@@ -573,18 +662,53 @@ public abstract class DyModularForce extends ModularForce {
          * @return
          */
         protected Coordinates computeRepulsionPoint(Coordinates poleCoordinates, Coordinates memberCoordinates){
-            Coordinates direction = poleCoordinates.minus(memberCoordinates);
-            double radiusXSquared = Math.pow(poleCoordinates.x() + 18, 2);
-            double radiusYSquared = Math.pow(poleCoordinates.y() + 18, 2);
+            double radiusXSquared = Math.pow(poleCoordinates.x() + 25, 2);
+            double radiusYSquared = Math.pow(poleCoordinates.y() + 25, 2);
             double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
             return new Coordinates(poleCoordinates.x() + radiusLength, poleCoordinates.y() + radiusLength);
         }
 
-        protected double computeRadius(Coordinates poleCoordinates){
-            double radiusXSquared = Math.pow(poleCoordinates.x() + 18, 2);
-            double radiusYSquared = Math.pow(poleCoordinates.y() + 18, 2);
-            double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
-            return radiusLength;
+
+
+    }
+
+    public static class NonClusterNodesRepulsion extends DyModularForce {
+
+        private NodeAttribute<Coordinates> forces;
+
+
+        @Override
+        protected NodeAttribute<Coordinates> computeForces() {
+            forces = new NodeAttribute<>(new Coordinates(0, 0));
+
+            Set<Node> clusteredNodesSet = new HashSet<>();
+            Set<Node> clusterPoles = new HashSet<>();
+            Set<Node> nonClusteredNodes = new HashSet<>();
+
+            for(Cluster cluster : stcSynchronizer().originalGraph().clusters()){
+                Node mirrorPole = mirrorGraph().getNode(cluster.pole().id());
+                clusteredNodesSet.add(mirrorPole);
+                clusterPoles.add(mirrorPole);
+
+                for(Node memberNode : cluster.members()){
+                    Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
+                    clusteredNodesSet.add(mirrorMemberNode);
+                }
+            }
+
+            for(Node node : mirrorGraph().nodes()){
+                if(!clusteredNodesSet.contains(node)){
+                    nonClusteredNodes.add(node);
+                }
+            }
+
+
+            SelectedNodeNodeRepulsion repulsion = new SelectedNodeNodeRepulsion(25, clusterPoles, nonClusteredNodes);
+            forces = repulsion.computeForces();
+
+
+            return forces;
         }
     }
+
 }

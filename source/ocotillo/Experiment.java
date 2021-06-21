@@ -163,6 +163,8 @@ public abstract class Experiment {
                 .withForce(new DyModularForce.ConnectionAttraction(delta))
                 .withForce(new DyModularForce.EdgeRepulsion(delta))
                 .withForce(new DyModularForce.PoleAttraction(delta)) // TODO possibly remove if a new .withConstraint() is successful
+                .withForce(new DyModularForce.CircumferenceRepulsion(delta))
+                .withForce(new DyModularForce.NonClusterNodesRepulsion())
                 .withConstraint(new ModularConstraint.DecreasingMaxMovement(2 * delta))
                 .withConstraint(new ModularConstraint.MovementAcceleration(2 * delta, Geom.e3D))
                 .withConstraint(new ModularConstraint.PinnedNodes(dynamicGraph.poles()))
