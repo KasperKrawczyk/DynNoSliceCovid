@@ -344,11 +344,11 @@ public class ModularFdl {
      */
     private void computeConstraints() {
         for (ModularConstraint constraintDefinition : constraintSystem) {
-            NodeAttribute<Double> computedconstraint = constraintDefinition.computeConstraints();
-            constraints.setDefault(Math.min(constraints.getDefault(), computedconstraint.getDefault()));
+            NodeAttribute<Double> computedConstraint = constraintDefinition.computeConstraints();
+            constraints.setDefault(Math.min(constraints.getDefault(), computedConstraint.getDefault()));
             for (Node node : mirrorGraph.nodes()) {
                 double nodeMovement = Math.min(constraints.get(node), constraints.getDefault());
-                nodeMovement = Math.min(nodeMovement, computedconstraint.get(node));
+                nodeMovement = Math.min(nodeMovement, computedConstraint.get(node));
                 constraints.set(node, nodeMovement);
             }
         }

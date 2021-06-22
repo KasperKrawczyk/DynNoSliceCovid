@@ -63,6 +63,10 @@ public abstract class DyModularForce extends ModularForce {
         return dyModularFdl.synchronizer;
     }
 
+    protected ArrayList<Node> getDirectNodes(){
+        return dyModularFdl.synchronizer.getDirectNodes();
+    }
+
     protected double computeRadius(Coordinates poleCoordinates){
         double radiusXSquared = Math.pow(poleCoordinates.x() + 25, 2);
         double radiusYSquared = Math.pow(poleCoordinates.y() + 25, 2);
@@ -276,10 +280,19 @@ public abstract class DyModularForce extends ModularForce {
 
         @Override
         protected NodeAttribute<Coordinates> computeForces() {
+            for(Node node : getDirectNodes()){
+                System.out.println("node in getDirectNodes = " + node);
+                Node mirrorNode = mirrorGraph().getNode(node.id());
+                Box newBox = locator().getBox(mirrorNode);
+                System.out.println("node box = " + newBox);
+                Collection<Node> closeNodes = locator().getCloseNodes(mirrorNode, 25.0);
+                for(Node closeNode : closeNodes){
+                    System.out.println("close node = " + closeNode);
+                }
+            } //TODO write getters for mirrorNodes fetched via directNodes' IDs
             if (centre == null) {
                 centre = new Coordinates(0, 0);
                 for (Node node : mirrorGraph().nodes()) {
-                    System.out.println("node id in mirrorGraph.nodes() " + node.id());
                     centre.plusIP(mirrorPositions().get(node).restr(2));
                 }
                 centre.divideIP(mirrorGraph().nodeCount());
@@ -559,8 +572,6 @@ public abstract class DyModularForce extends ModularForce {
 
     public static class PoleAttraction extends DyModularForce {
 
-        public double initialExponent = 1;
-        public double finalExponent = 3;
         /**
          * Used to determine the distance of the repulsion boundary from the pole node
          * Prevents the cluster members clustering too densely
@@ -594,6 +605,7 @@ public abstract class DyModularForce extends ModularForce {
 
                     Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
                     Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(mirrorMemberNode))).timesIP(repulsionFactor).minus();
+                    System.out.println("force for " + mirrorMemberNode + " = " + force);
                     forces.set(mirrorMemberNode, force);
                     System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorMemberNode = " + mirrorMemberNode.id());
                 }
@@ -610,18 +622,13 @@ public abstract class DyModularForce extends ModularForce {
          */
         public double repulsionFactor = 30;
 
-        protected final double desiredDistance;
+
         private NodeAttribute<Coordinates> forces;
 
         /**
          * Builds a circumference repulsion force.
          * Member nodes of this cluster will be repulsed from the edge of the circle towards the pole.
-         *
-         * @param desiredDistance the ideal edge distance.
          */
-        public CircumferenceRepulsion(double desiredDistance) {
-            this.desiredDistance = desiredDistance;
-        }
 
         @Override
         protected NodeAttribute<Coordinates> computeForces() {

@@ -15,10 +15,8 @@
  */
 package ocotillo.graph.layout.fdl.modular;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+
 import ocotillo.geometry.Coordinates;
 import ocotillo.geometry.Geom;
 import ocotillo.geometry.GeomE;
@@ -317,6 +315,64 @@ public abstract class ModularConstraint extends ModularElement {
             for (Node node : pinnedNodes) {
                 this.pinnedNodes.set(node, true);
             }
+        }
+
+        @Override
+        protected NodeAttribute<Double> computeConstraints() {
+            NodeAttribute<Double> maxMovement = new NodeAttribute<>(Double.POSITIVE_INFINITY);
+            for (Node node : mirrorGraph().nodes()) {
+                if (pinnedNodes.get(node)) {
+                    maxMovement.set(node, 0.0);
+                }
+            }
+            return maxMovement;
+        }
+    }
+
+    /**
+     * Constraint that forbids pole nodes to move.
+     */
+    public static class PinnedPoles extends ModularConstraint {
+
+        /**
+         * The pinned nodes.
+         */
+        protected NodeAttribute<Boolean> pinnedNodes;
+        protected Collection<Node> pinnedNodesList;
+
+        /**
+         * Constructs a pinned nodes constraint.
+         *
+         * @param pinnedOriginalNodes the original pinned nodes.
+         */
+        public PinnedPoles(NodeAttribute<Boolean> pinnedOriginalNodes) {
+            this.pinnedNodes = pinnedOriginalNodes;
+        }
+
+        /**
+         * Constructs a pinned nodes constraint.
+         *
+         * @param pinnedOriginalNodes the original pinned nodes.
+         */
+        public PinnedPoles(Collection<Node> pinnedOriginalNodes) {
+            this.pinnedNodesList = setMirrorNodes(pinnedOriginalNodes);
+            this.pinnedNodes = new NodeAttribute<>(false);
+            for (Node node : pinnedNodesList) {
+                System.out.println("pinning node " + node.id());
+                this.pinnedNodes.set(node, true);
+            }
+        }
+
+        private Collection<Node> setMirrorNodes(Collection<Node> pinnedOriginalNodes){
+            Collection<Node> mirrorNodesToPin = new ArrayList<>();
+            for(Node node : synchronizer().getMirrorGraph().nodes()){
+                System.out.println("node in synchronizer().getMirrorGraph() = " + node);
+            }
+            for(Node originalNode : pinnedOriginalNodes){
+                Node mirrorNode = synchronizer().getMirrorGraph().getNode(originalNode.id());
+                mirrorNodesToPin.add(mirrorNode);
+            }
+            return mirrorNodesToPin;
         }
 
         @Override
