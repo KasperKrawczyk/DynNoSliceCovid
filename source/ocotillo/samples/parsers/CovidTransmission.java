@@ -921,7 +921,7 @@ public class CovidTransmission {
         //create poles
         for(String location : selectedLocationsList){
             polesIDCounter--;
-            Node pole = graph.newNode("" + location);
+            Node pole = graph.newNode("" + location, "" + location);
             presence.set(pole, new Evolution<>(false));
             label.set(pole, new Evolution<>(location));
             position.set(pole, new Evolution<>(new Coordinates(0, 0)));
@@ -943,7 +943,7 @@ public class CovidTransmission {
         //draw nodes, set initial node color
         for (Person person : dataset.personsSet) {
             int personID = person.id;
-            Node newNode = graph.newNode("" + personID);
+            Node newNode = graph.newNode("" + personID, "" + personID);
             presence.set(newNode, new Evolution<>(false));
             label.set(newNode, new Evolution<>("" + personID));
             position.set(newNode, new Evolution<>(new Coordinates(0, 0)));
@@ -995,6 +995,7 @@ public class CovidTransmission {
         }
 
 
+        //draw clusters
         for (Person person : dataset.personsSet) {
             if (person.from == -1) {
                 continue;
@@ -1007,7 +1008,7 @@ public class CovidTransmission {
                 Edge locationAttractionEdge = graph.newEdge(member, poleNode);
                 edgePresence.set(locationAttractionEdge, new Evolution<>(false));
                 edgeColor.set(locationAttractionEdge, new Evolution<>(locationAttractionEdgeColor));
-                //edgeStrength.set(locationAttractionEdge, new Evolution<>(2.5));
+                edgeStrength.set(locationAttractionEdge, new Evolution<>(5.5));
 
                 Interval transmissionInterval = Interval.newRightClosed(person.day, dataset.timeSteps.length);
                 edgePresence.get(locationAttractionEdge).insert(new FunctionConst<>(transmissionInterval, true));
@@ -1029,8 +1030,6 @@ public class CovidTransmission {
             }
 
         }
-
-
 
         Commons.scatterNodes(graph, 200);
 

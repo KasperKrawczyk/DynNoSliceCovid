@@ -16,11 +16,8 @@
 package ocotillo.dygraph.layout.fdl.modular;
 
 import java.text.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
 import ocotillo.dygraph.extra.SpaceTimeCubeSynchroniser;
 import ocotillo.dygraph.extra.SpaceTimeCubeSynchroniser.MirrorConnection;
 import ocotillo.dygraph.extra.SpaceTimeCubeSynchroniser.MirrorLine;
@@ -31,6 +28,7 @@ import ocotillo.geometry.GeomE.PointRelation;
 import ocotillo.geometry.Interval;
 import ocotillo.graph.*;
 import ocotillo.graph.extra.BendExplicitGraphSynchroniser.MirrorEdge;
+import ocotillo.graph.layout.*;
 import ocotillo.graph.layout.fdl.modular.ModularForce;
 import ocotillo.structures.IntervalTree;
 
@@ -67,13 +65,35 @@ public abstract class DyModularForce extends ModularForce {
         return dyModularFdl.synchronizer.getDirectNodes();
     }
 
+    protected Node getDirectNode(Node node){
+        return dyModularFdl.synchronizer.getDirectNode(node);
+    }
+
+    protected Node getDirectNode(String nodeID){
+        return dyModularFdl.synchronizer.getDirectNode(nodeID);
+    }
+
     protected double computeRadius(Coordinates poleCoordinates){
-        double radiusXSquared = Math.pow(poleCoordinates.x() + 25, 2);
-        double radiusYSquared = Math.pow(poleCoordinates.y() + 25, 2);
+        double radiusXSquared = Math.pow(poleCoordinates.x() + 12.5, 2);
+        double radiusYSquared = Math.pow(poleCoordinates.y() + 12.5, 2);
         double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
         return radiusLength;
     }
 
+    protected Collection<Node> pruneSynchroTargetNodes(Collection<Node> unprunedNodes){
+        ArrayList<Node> prunedNodes = new ArrayList<>();
+        for(Node node : unprunedNodes){
+            //System.out.println("before pruning = " + node);
+            String nodeID = node.id();
+            char lastChar = nodeID.charAt(nodeID.length() - 1);
+            if(lastChar != 'n'){
+                prunedNodes.add(node);
+                //System.out.println("added? = " + node);
+            }
+
+        }
+        return prunedNodes;
+    }
 
 
 
@@ -102,6 +122,42 @@ public abstract class DyModularForce extends ModularForce {
 //            System.out.println("repulsionPoint: x = " + thirdX + " y = " + thirdY);
 
         return (secondY - firstY) * (thirdX - secondX) == (thirdY - secondY) * (secondX - firstX);
+    }
+
+
+    /**
+     * Container for the current and desired distances between two elements.
+     */
+    protected static class DyDistances {
+
+        /**
+         * The minimal distance between two elements.
+         */
+        protected static final double minimal = 0.01;
+
+        /**
+         * The computed distance between two elements for the given temperature.
+         * The glyph sizes are linearly interpolated from zero size at
+         * temperature 1, to normal size at temperature 0. This value is limited
+         * not to be lower of the minimal distance.
+         */
+        protected double currentDistance;
+        /**
+         * The desired distance between the center of two elements. The distance
+         * is computed considering the elements at full size.
+         */
+        protected double desiredDistance;
+
+        /**
+         * Construct a distances object.
+         *
+         * @param currentDistance the current distance.
+         * @param desiredDistance the desired distance.
+         */
+        public DyDistances(double currentDistance, double desiredDistance) {
+            this.currentDistance = Math.max(minimal, currentDistance);
+            this.desiredDistance = desiredDistance;
+        }
     }
 
     /**
@@ -280,16 +336,16 @@ public abstract class DyModularForce extends ModularForce {
 
         @Override
         protected NodeAttribute<Coordinates> computeForces() {
-            for(Node node : getDirectNodes()){
-                System.out.println("node in getDirectNodes = " + node);
-                Node mirrorNode = mirrorGraph().getNode(node.id());
-                Box newBox = locator().getBox(mirrorNode);
-                System.out.println("node box = " + newBox);
-                Collection<Node> closeNodes = locator().getCloseNodes(mirrorNode, 25.0);
-                for(Node closeNode : closeNodes){
-                    System.out.println("close node = " + closeNode);
-                }
-            } //TODO write getters for mirrorNodes fetched via directNodes' IDs
+//            for(Node node : getDirectNodes()){
+//                System.out.println("node in getDirectNodes = " + node);
+//                Node mirrorNode = mirrorGraph().getNode(node.id());
+//                Box newBox = locator().getBox(mirrorNode);
+//                System.out.println("node box = " + newBox);
+//                Collection<Node> closeNodes = locator().getCloseNodes(mirrorNode, 12.5);
+//                for(Node closeNode : closeNodes){
+//                    System.out.println("close node = " + closeNode);
+//                }
+//            }
             if (centre == null) {
                 centre = new Coordinates(0, 0);
                 for (Node node : mirrorGraph().nodes()) {
@@ -576,7 +632,7 @@ public abstract class DyModularForce extends ModularForce {
          * Used to determine the distance of the repulsion boundary from the pole node
          * Prevents the cluster members clustering too densely
          */
-        public double repulsionFactor = 50;
+        public double attractionFactor = 50;
 
         protected final double desiredDistance;
         private NodeAttribute<Coordinates> forces;
@@ -592,22 +648,22 @@ public abstract class DyModularForce extends ModularForce {
 
         @Override
         protected NodeAttribute<Coordinates> computeForces() {
-            forces = new NodeAttribute<>(new Coordinates(0, 0, 0));
+            forces = new NodeAttribute<>(new Coordinates(0, 0));
 
             for(Cluster cluster : stcSynchronizer().originalGraph().clusters()){
 
                 Node mirrorPole = mirrorGraph().getNode(cluster.pole().id());
                 Coordinates poleCoordinates = mirrorPositions().get(mirrorPole);
 
-                System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorPole = " + mirrorPole.id());
+                //System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorPole = " + mirrorPole.id());
 
                 for (Node memberNode : cluster.members()) {
 
                     Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
-                    Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(mirrorMemberNode))).timesIP(repulsionFactor).minus();
-                    System.out.println("force for " + mirrorMemberNode + " = " + force);
+                    Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(mirrorMemberNode))).timesIP(attractionFactor).minusIP();
+                    //System.out.println("force for " + mirrorMemberNode + " = " + force);
                     forces.set(mirrorMemberNode, force);
-                    System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorMemberNode = " + mirrorMemberNode.id());
+                    //System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorMemberNode = " + mirrorMemberNode.id());
                 }
             }
 
@@ -620,7 +676,7 @@ public abstract class DyModularForce extends ModularForce {
          * Used to determine the distance of the repulsion boundary from the pole node
          * Prevents the cluster members clustering too densely
          */
-        public double repulsionFactor = 30;
+        public double repulsionFactor = 60;
 
 
         private NodeAttribute<Coordinates> forces;
@@ -682,7 +738,36 @@ public abstract class DyModularForce extends ModularForce {
     public static class NonClusterNodesRepulsion extends DyModularForce {
 
         private NodeAttribute<Coordinates> forces;
+        private List<Node> poleNodes;
 
+        /**
+         * The desired distance between two nodes.
+         */
+        protected double nodeNodeDistance;
+        protected double distanceMargin = 10;
+        /**
+         * The factor of the desired distance at witch two nodes are close
+         * enough to be significantly effecting each other.
+         */
+        public double distanceActivityFactor = 3;
+        /**
+         * The initial force exponent.
+         */
+        public double initialExponent = 4;
+        /**
+         * The final force exponent.
+         */
+        public double finalExponent = 2;
+
+        public NonClusterNodesRepulsion(List<Node> poleNodes, double radius){
+            this.nodeNodeDistance = radius + this.distanceMargin;
+            this.poleNodes = poleNodes;
+        }
+
+
+        public NonClusterNodesRepulsion(double radius){
+            this.nodeNodeDistance = radius + this.distanceMargin;
+        }
 
         @Override
         protected NodeAttribute<Coordinates> computeForces() {
@@ -703,19 +788,93 @@ public abstract class DyModularForce extends ModularForce {
                 }
             }
 
-            for(Node node : mirrorGraph().nodes()){
+            for(Node node : stcSynchronizer().originalGraph().nodes()){
                 if(!clusteredNodesSet.contains(node)){
+                    //System.out.println("adding a nonClusteredNode = " + node);
                     nonClusteredNodes.add(node);
                 }
             }
 
+            Set<Node> mirrorNonClusteredNodes = new HashSet<>();
+            for(Node nonClusteredNode : nonClusteredNodes){
+                Node mirrorNode = mirrorGraph().getNode(nonClusteredNode.id());
+                mirrorNonClusteredNodes.add(mirrorNode);
+            }
 
-            SelectedNodeNodeRepulsion repulsion = new SelectedNodeNodeRepulsion(25, clusterPoles, nonClusteredNodes);
-            forces = repulsion.computeForces();
+            for(Node pole : clusterPoles){
+                Collection<Node> withinCluster = locator().getCloseNodes(pole, 25);
+                withinCluster.removeAll(clusteredNodesSet);
+                withinCluster = pruneSynchroTargetNodes(withinCluster);
+                //System.out.println("pole node = " + pole);
+                for(Node nodeToRepel : withinCluster){
+                    //System.out.println("nodeToRepel = " + nodeToRepel);
+                    Coordinates[] computedForces = computeForces(pole, nodeToRepel);
+                    forces.set(pole, computedForces[0].plusIP(forces.get(pole)));
+                    forces.set(nodeToRepel, computedForces[1].plusIP(forces.get(nodeToRepel)));
+                }
+            }
+
 
 
             return forces;
         }
-    }
 
+        protected double desiredDistance() {
+            return this.nodeNodeDistance;
+        }
+
+        /**
+         * Computes the forces for the given pair of nodes and temperature. The
+         * force to apply to the first node will be contained in the position 0
+         * of the returned array, and the force to apply to the second node in
+         * position 1.
+         *
+         * @param nodeA the first node.
+         * @param nodeB the second node.
+         * @return the pair of forces to apply to the given nodes.
+         */
+        protected Coordinates[] computeForces(Node nodeA, Node nodeB) {
+            Coordinates a = mirrorPositions().get(nodeA);
+            Coordinates b = mirrorPositions().get(nodeB);
+            Coordinates ab = Geom.e2D.unitVector(a.restrMinus(b, 2));
+            DyDistances distances = computeDyDistances(nodeA, nodeB, temperature());
+            Coordinates force = (ab).timesIP(Math.pow(distances.desiredDistance, 8));
+            return new Coordinates[]{force, force.minus()};
+        }
+
+        /**
+         * Computes the exponent for the given force.
+         *
+         * @return the exponent that corresponds to that temperature.
+         */
+        protected double computeExponent() {
+            return finalExponent + (initialExponent - finalExponent);
+        }
+
+
+
+        /**
+         * Computes current and desired distances between two nodes.
+         *
+         * @param a the first node.
+         * @param b the second node.
+         * @param temperature the temperature.
+         * @return the distances.
+         */
+        protected DyDistances computeDyDistances(Node a, Node b, double temperature) {
+            NodeAttribute<Coordinates> mirrorSizes = mirrorGraph().nodeAttribute(StdAttribute.nodeSize);
+            NodeAttribute<StdAttribute.NodeShape> mirrorShapes = mirrorGraph().nodeAttribute(StdAttribute.nodeShape);
+            Coordinates aPos = mirrorPositions().get(a);
+            Coordinates bPos = mirrorPositions().get(b);
+            double distanceAtZeroSize = Geom.e2D.magnitude(bPos.restrMinus(aPos, 2));
+            double distanceAtFullSize = Layout2D.nodeNodeGlyphDistance(mirrorGraph(), a, b, mirrorPositions(), mirrorSizes, mirrorShapes);
+            double elemRadiusAtFullSize = distanceAtZeroSize - distanceAtFullSize;
+            double currentElemRadius = elemRadiusAtFullSize * (1 - temperature);
+            double currentDistance = distanceAtZeroSize - currentElemRadius;
+            double desiredDistance = this.nodeNodeDistance + elemRadiusAtFullSize - currentElemRadius;
+            //System.out.println("node a  = " + a + " | node b = " + b);
+            //System.out.println("current distance = " + currentDistance + " desired = " + desiredDistance);
+            return new DyDistances(currentDistance, desiredDistance);
+        }
+    }
 }

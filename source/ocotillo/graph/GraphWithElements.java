@@ -61,6 +61,15 @@ public class GraphWithElements {
     /**
      * Creates and inserts a new node.
      *
+     * @return the new node.
+     */
+    public Node newNodeWithOriginId(String originId) {
+        return newNode(null, originId);
+    }
+
+    /**
+     * Creates and inserts a new node.
+     *
      * @param id the node id.
      * @return the new node.
      */
@@ -75,6 +84,27 @@ public class GraphWithElements {
         add(node);
         return node;
     }
+
+    /**
+     * Creates and inserts a new node with their originId
+     * This facilitates the process of tracking nodes making up mirrorLines in synchronisers.
+     *
+     * @param id the node id.
+     * @return the new node.
+     */
+    public Node newNode(String id, String originId) {
+        if (id == null) {
+            do {
+                id = (++nodeIdIndex) + "n";
+            } while (hasNode(id));
+        }
+
+        Node node = new Node(id, originId);
+        add(node);
+        return node;
+    }
+
+
 
     /**
      * Checks if a node with given id is part of the graph.

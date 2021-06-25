@@ -496,7 +496,7 @@ public class BendExplicitGraphSynchroniser {
 
     /**
      * Adds a bend to a mirror edge by substituting a segment with a chain of
-     * two new segment and a new bend. The new bend is placed at the given
+     * two new segments and a new bend. The new bend is placed at the given
      * position.
      *
      * @param mirrorEdge the mirror edge.

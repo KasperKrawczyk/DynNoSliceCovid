@@ -421,6 +421,14 @@ public class SpaceTimeCubeSynchroniser {
         return new ArrayList<>(this.directNodeMap.keySet());
     }
 
+    public Node getDirectNode(Node node) {
+        return this.originalGraph.getNode(node.id());
+    }
+
+    public Node getDirectNode(String nodeID) {
+        return this.originalGraph.getNode(nodeID);
+    }
+
     /**
      * The mirror entity of an edge appearance in the dynamic graph. Such entity
      * is a trapezoid surface in the space-time cube, and it is currently not

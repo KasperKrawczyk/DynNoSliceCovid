@@ -98,6 +98,14 @@ public abstract class ModularConstraint extends ModularElement {
         @Override
         protected NodeAttribute<Double> computeConstraints() {
             NodeAttribute<Double> constraints = new NodeAttribute<>(Double.POSITIVE_INFINITY);
+
+//            System.out.println("temperature = " + temperature());
+//            for(Node node : modularFdl.originalGraph.nodes()){
+//                System.out.println("modularFdl.originalGraph.nodes() = " + node.id());
+//                Coordinates currentForce = forces().get(node);
+//                System.out.println("x = " + currentForce.x() + " | y = " + currentForce.y());
+//            }
+
             for (Node node : mirrorGraph().nodes()) {
 
                 Coordinates currentForce = forces().get(node);
@@ -352,25 +360,32 @@ public abstract class ModularConstraint extends ModularElement {
         /**
          * Constructs a pinned nodes constraint.
          *
-         * @param pinnedOriginalNodes the original pinned nodes.
+         * @param originalNodesToPin the original pinned nodes.
          */
-        public PinnedPoles(Collection<Node> pinnedOriginalNodes) {
-            this.pinnedNodesList = setMirrorNodes(pinnedOriginalNodes);
-            this.pinnedNodes = new NodeAttribute<>(false);
-            for (Node node : pinnedNodesList) {
-                System.out.println("pinning node " + node.id());
-                this.pinnedNodes.set(node, true);
+        public PinnedPoles(Collection<Node> originalNodesToPin) {
+            for(Node node : originalNodesToPin){
+                System.out.println("node in originalNodesToPin = " + node);
             }
+
+            for(Node node : modularFdl.originalGraph.nodes()){
+                System.out.println("node in modularFdl.originalGraph.nodes() = " + node);
+            }
+
+            this.pinnedNodes = new NodeAttribute<>(false);
+            this.pinnedNodesList = setPinnedNodes(originalNodesToPin);
+
+
         }
 
-        private Collection<Node> setMirrorNodes(Collection<Node> pinnedOriginalNodes){
+        private Collection<Node> setPinnedNodes(Collection<Node> originalNodesToPin){
             Collection<Node> mirrorNodesToPin = new ArrayList<>();
-            for(Node node : synchronizer().getMirrorGraph().nodes()){
-                System.out.println("node in synchronizer().getMirrorGraph() = " + node);
-            }
-            for(Node originalNode : pinnedOriginalNodes){
-                Node mirrorNode = synchronizer().getMirrorGraph().getNode(originalNode.id());
+
+
+            for(Node originalNode : originalNodesToPin){
+                Node mirrorNode = modularFdl.originalGraph.getNode(originalNode.id());
                 mirrorNodesToPin.add(mirrorNode);
+                pinnedNodes.set(mirrorNode, true);
+                //System.out.println("a pinned mirrorMode = " + mirrorNode);
             }
             return mirrorNodesToPin;
         }
@@ -378,7 +393,7 @@ public abstract class ModularConstraint extends ModularElement {
         @Override
         protected NodeAttribute<Double> computeConstraints() {
             NodeAttribute<Double> maxMovement = new NodeAttribute<>(Double.POSITIVE_INFINITY);
-            for (Node node : mirrorGraph().nodes()) {
+            for (Node node : modularFdl.originalGraph.nodes()) {
                 if (pinnedNodes.get(node)) {
                     maxMovement.set(node, 0.0);
                 }

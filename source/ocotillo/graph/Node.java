@@ -23,6 +23,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public final class Node extends Element {
 
+    private String originId;
+
     /**
      * Constructs a node.
      *
@@ -30,5 +32,18 @@ public final class Node extends Element {
      */
     public Node(String id) {
         super(id);
+    }
+
+    public Node(String id, String originId){
+        super(id);
+        this.originId = originId;
+    }
+
+    public String originId(){
+        return this.originId;
+    }
+
+    public void setOriginId(String originId){
+        this.originId = originId;
     }
 }

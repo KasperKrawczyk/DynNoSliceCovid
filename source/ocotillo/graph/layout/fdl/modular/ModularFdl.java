@@ -295,6 +295,7 @@ public class ModularFdl {
 
         synchronizer.updateMirror();
         for (int i = 0; i < numberOfIterations; i++) {
+
             long iterationStartTime = System.nanoTime();
 
             mirrorPositions.startBulkNotification();

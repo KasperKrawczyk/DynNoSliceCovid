@@ -157,13 +157,18 @@ public abstract class Experiment {
      */
     public DyModularFdl getContinuousLayoutAlgorithmCovid(DyGraph dyGraph, ModularPostProcessing postProcessing) {
 
+        for(Node node : dyGraph.nodes()){
+            System.out.println("Experiment node orgId = " + node.originId());
+        }
+
         DyModularFdl.DyModularFdlBuilder builder = new DyModularFdl.DyModularFdlBuilder(dyGraph, dataset.suggestedTimeFactor)
                 .withForce(new DyModularForce.TimeStraightning(delta))
                 .withForce(new DyModularForce.Gravity())
-                .withForce(new DyModularForce.ConnectionAttraction(delta))
+                .withForce(new DyModularForce.ConnectionAttraction(delta * 0.5))
                 .withForce(new DyModularForce.EdgeRepulsion(delta))
                 .withForce(new DyModularForce.PoleAttraction(delta))
                 .withForce(new DyModularForce.CircumferenceRepulsion())
+                .withForce(new DyModularForce.NonClusterNodesRepulsion(25))
                 .withConstraint(new ModularConstraint.DecreasingMaxMovement(2 * delta))
                 .withConstraint(new ModularConstraint.MovementAcceleration(2 * delta, Geom.e3D))
                 //.withConstraint(new ModularConstraint.PinnedPoles(dyGraph.poles()))

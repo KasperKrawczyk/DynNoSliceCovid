@@ -26,7 +26,7 @@ import ocotillo.graph.layout.locator.ElementLocator;
  */
 public class ModularElement {
 
-    private ModularFdl modularFdl;
+    protected ModularFdl modularFdl;
 
     /**
      * Attaches the modular element to a ModularFdl instance. Should be only
