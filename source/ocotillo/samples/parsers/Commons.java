@@ -16,7 +16,8 @@
 package ocotillo.samples.parsers;
 
 import java.awt.Color;
-import java.util.Random;
+import java.util.*;
+
 import ocotillo.dygraph.DyEdgeAttribute;
 import ocotillo.dygraph.DyGraph;
 import ocotillo.dygraph.DyNodeAttribute;
@@ -28,9 +29,7 @@ import ocotillo.dygraph.Interpolation;
 import ocotillo.dygraph.extra.EvolutionAnalyser;
 import ocotillo.geometry.Coordinates;
 import ocotillo.geometry.Interval;
-import ocotillo.graph.Edge;
-import ocotillo.graph.Node;
-import ocotillo.graph.StdAttribute;
+import ocotillo.graph.*;
 
 /**
  * Parses the InfoVis collaboration data.
@@ -76,6 +75,42 @@ public class Commons {
             graph.nodeAttribute(StdAttribute.nodePosition).set(node,
                     new Evolution<>(new Coordinates(randomGen.nextDouble() * distance,
                             randomGen.nextDouble() * distance)));
+        }
+    }
+
+    public static void scatterNodesAroundClusterPoles(DyGraph graph,
+                                                      double clusterDistance,
+                                                      double memberDistance,
+                                                      double nonMemberDistance) {
+        Random randomGen = new Random(73);
+        Set<Node> nodesDone = new HashSet<>();
+
+        for(Cluster cluster : graph.clusters()){
+            Node poleNode = cluster.pole();
+            Coordinates poleCoordinates = new Coordinates(randomGen.nextDouble() * clusterDistance,
+                    randomGen.nextDouble() * clusterDistance);
+            graph.nodeAttribute(StdAttribute.nodePosition).set(poleNode, new Evolution<>(poleCoordinates));
+            nodesDone.add(poleNode);
+
+            for(Node memberNode : cluster.members()){
+                if(!nodesDone.contains(memberNode)){
+                    double offset = ((memberDistance - ( - memberDistance) + 1) *  randomGen.nextDouble()) + ( - memberDistance);
+                    Coordinates memberCoordinates = new Coordinates(
+                            poleCoordinates.x() + offset,
+                            poleCoordinates.y() + offset);
+                    graph.nodeAttribute(StdAttribute.nodePosition).set(memberNode, new Evolution<>(memberCoordinates));
+                    nodesDone.add(memberNode);
+                }
+            }
+        }
+
+        for (Node node : graph.nodes()) {
+            if(!nodesDone.contains(node)){
+                Coordinates nodeCoordinates = (new Coordinates(randomGen.nextDouble() * nonMemberDistance,
+                        randomGen.nextDouble() * nonMemberDistance));
+                graph.nodeAttribute(StdAttribute.nodePosition).set(node, new Evolution<>(nodeCoordinates));
+
+            }
         }
     }
 
