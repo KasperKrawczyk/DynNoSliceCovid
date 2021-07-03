@@ -16,6 +16,7 @@
 package ocotillo.samples.parsers;
 
 import java.awt.Color;
+import java.text.*;
 import java.util.*;
 
 import ocotillo.dygraph.DyEdgeAttribute;
@@ -84,6 +85,7 @@ public class Commons {
                                                       double nonMemberDistance) {
         Random randomGen = new Random(73);
         Set<Node> nodesDone = new HashSet<>();
+        DecimalFormat df = new DecimalFormat("###.##");
 
         for(Cluster cluster : graph.clusters()){
             Node poleNode = cluster.pole();
@@ -98,6 +100,8 @@ public class Commons {
                     Coordinates memberCoordinates = new Coordinates(
                             poleCoordinates.x() + offset,
                             poleCoordinates.y() + offset);
+//                    System.out.println(poleNode.id() + " : x = " + df.format(poleCoordinates.x()) + " | y = " + df.format(poleCoordinates.y()));
+//                    System.out.println(memberNode.id() + " : x = " + df.format(memberCoordinates.x()) + " | y = " + df.format(memberCoordinates.y()));
                     graph.nodeAttribute(StdAttribute.nodePosition).set(memberNode, new Evolution<>(memberCoordinates));
                     nodesDone.add(memberNode);
                 }

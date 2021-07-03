@@ -1031,7 +1031,7 @@ public class CovidTransmission {
 
         }
 
-        Commons.scatterNodesAroundClusterPoles(graph, 200, 12.5, 200);
+        Commons.scatterNodesAroundClusterPoles(graph, 200, 2.5, 200);
 
         Commons.mergePresenceFunctions(graph,
                 -1.5,

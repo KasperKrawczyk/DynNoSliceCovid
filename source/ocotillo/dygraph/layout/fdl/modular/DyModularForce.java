@@ -670,6 +670,7 @@ public abstract class DyModularForce extends ModularForce {
             return forces;
         }
     }
+
     public static class CircumferenceRepulsion extends DyModularForce {
 
         /**
@@ -703,11 +704,13 @@ public abstract class DyModularForce extends ModularForce {
 
                     Coordinates mirrorMemberCoordinates = mirrorPositions().get(mirrorMemberNode);
                     Coordinates mirrorPoleToMember = mirrorPoleCoordinates.minus(mirrorMemberCoordinates); // direction
-                    double radiusMagnitude  = computeRadius(mirrorPoleCoordinates);
-                    double poleToMemberMagnitude = Geom.e3D.magnitude(mirrorPoleToMember);
-                    double magnitudesScale =  poleToMemberMagnitude / radiusMagnitude;
-                    Coordinates repulsionPoint = computeRepulsionPoint(mirrorPoleToMember, mirrorMemberCoordinates);
-                    Coordinates force = repulsionPoint.plus(mirrorMemberCoordinates.times(magnitudesScale * repulsionFactor));
+                    //double radiusMagnitude  = computeRadius(mirrorPoleCoordinates);
+                    //double poleToMemberMagnitude = Geom.e2D.magnitude(mirrorPoleToMember);
+                    //double magnitudesScale =  poleToMemberMagnitude / radiusMagnitude;
+                    Coordinates projection = computeProjectionPoint(mirrorPoleToMember, mirrorMemberCoordinates);
+                    //double memberToProjectionMagnitude = Geom.e2D.magnitude(mirrorMemberCoordinates.minus(projection));
+
+                    Coordinates force = computeForce(mirrorMemberCoordinates, projection);
                     forces.set(memberNode, force);
                     //System.out.println(areCollinear(mirrorPoleCoordinates, mirrorMemberCoordinates, repulsionPoint));
 
@@ -718,17 +721,63 @@ public abstract class DyModularForce extends ModularForce {
         }
 
         /**
-         * Computes coordinates of a point on the cluster's circumference
-         * which will repulse a member node towards the centre
+         * Computes coordinates of a projection point of a member node on the cluster's circumference
+         * which will repulse the member node towards the centre
          * @param poleCoordinates cluster centre coordinates
          * @param memberCoordinates member coordinates
          * @return
          */
-        protected Coordinates computeRepulsionPoint(Coordinates poleCoordinates, Coordinates memberCoordinates){
+        protected Coordinates computeProjectionPoint(Coordinates poleCoordinates, Coordinates memberCoordinates){
             double radiusXSquared = Math.pow(poleCoordinates.x() + 25, 2);
             double radiusYSquared = Math.pow(poleCoordinates.y() + 25, 2);
             double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
             return new Coordinates(poleCoordinates.x() + radiusLength, poleCoordinates.y() + radiusLength);
+        }
+
+        protected Coordinates computeDistancePoint(Coordinates poleCoordinates){
+            double radiusXSquared = Math.pow(poleCoordinates.x() + 24, 2);
+            double radiusYSquared = Math.pow(poleCoordinates.y() + 24, 2);
+            double radiusLength = Math.sqrt(radiusXSquared + radiusYSquared);
+            return new Coordinates(poleCoordinates.x() + radiusLength, poleCoordinates.y() + radiusLength);
+        }
+
+
+        protected Coordinates computeForce(Coordinates memberCoordinates,
+                                           Coordinates projectionCoordinates){
+
+            double memberToProjectionMagnitude = Geom.e2D.magnitude(memberCoordinates.minus(projectionCoordinates));
+
+//            Coordinates distance = poleCoordinates.minus(distancePoint);
+
+//            Coordinates dividendCoordinates = new Coordinates(distance.x() - memberToProjectionMagnitude,
+//                    distance.y() - memberToProjectionMagnitude);
+//
+//            double dividendXSquared = Math.pow(dividendCoordinates.x(), 2);
+//            double dividendYSquared = Math.pow(dividendCoordinates.y(), 2);
+
+//            Coordinates dividend = new Coordinates(dividendXSquared, dividendYSquared);
+
+//            double quotientX = dividend.x() / memberToProjectionMagnitude;
+//            double quotientY = dividend.y() / memberToProjectionMagnitude;
+
+//            Coordinates quotient = new Coordinates(quotientX, quotientY);
+
+//            double forceX = quotient.x() * (memberCoordinates.minus(projectionCoordinates).x());
+//            double forceY = quotient.y() * (memberCoordinates.minus(projectionCoordinates).y());
+
+
+            double desiredDistanceMinusMagnitude = 1 - memberToProjectionMagnitude;
+            double dividend = Math.pow(desiredDistanceMinusMagnitude, 4);
+            double divisor = memberToProjectionMagnitude;
+
+            double quotient = dividend / divisor;
+
+            Coordinates multipliedCoordinates = memberCoordinates.minus(projectionCoordinates);
+
+            Coordinates force = multipliedCoordinates.timesIP(quotient);
+
+            return force;
+
         }
 
 
