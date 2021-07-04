@@ -655,15 +655,11 @@ public abstract class DyModularForce extends ModularForce {
                 Node mirrorPole = mirrorGraph().getNode(cluster.pole().id());
                 Coordinates poleCoordinates = mirrorPositions().get(mirrorPole);
 
-                //System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorPole = " + mirrorPole.id());
-
                 for (Node memberNode : cluster.members()) {
 
                     Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
                     Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(mirrorMemberNode))).timesIP(attractionFactor).minusIP();
-                    //System.out.println("force for " + mirrorMemberNode + " = " + force);
                     forces.set(mirrorMemberNode, force);
-                    //System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorMemberNode = " + mirrorMemberNode.id());
                 }
             }
 
@@ -696,24 +692,28 @@ public abstract class DyModularForce extends ModularForce {
                 Node mirrorPole = mirrorGraph().getNode(cluster.pole().id());
                 Coordinates mirrorPoleCoordinates = mirrorPositions().get(mirrorPole);
 
-                //System.out.println("in stcSynchronizer().originalGraph().clusters() loop | mirrorPole = " + mirrorPole.id());
+                List<Coordinates> faceBoundaryPointsList = computeFaceBoundary(mirrorPoleCoordinates, 12.5);
 
                 for (Node memberNode : cluster.members()) {
 
                     Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
 
                     Coordinates mirrorMemberCoordinates = mirrorPositions().get(mirrorMemberNode);
-                    Coordinates mirrorPoleToMember = mirrorPoleCoordinates.minus(mirrorMemberCoordinates); // direction
-                    //double radiusMagnitude  = computeRadius(mirrorPoleCoordinates);
-                    //double poleToMemberMagnitude = Geom.e2D.magnitude(mirrorPoleToMember);
-                    //double magnitudesScale =  poleToMemberMagnitude / radiusMagnitude;
-                    Coordinates projection = computeProjectionPoint(mirrorPoleToMember, mirrorMemberCoordinates);
-                    //double memberToProjectionMagnitude = Geom.e2D.magnitude(mirrorMemberCoordinates.minus(projection));
 
-                    Coordinates force = computeForce(mirrorMemberCoordinates, projection);
-                    forces.set(memberNode, force);
-                    //System.out.println(areCollinear(mirrorPoleCoordinates, mirrorMemberCoordinates, repulsionPoint));
+                    for(int i = 0; i < faceBoundaryPointsList.size(); i++){
+                        Coordinates aPos = faceBoundaryPointsList.get(i);
+                        Coordinates bPos;
+                        if(i < faceBoundaryPointsList.size() - 1){
+                            bPos = faceBoundaryPointsList.get(i + 1);
+                        } else {
+                            bPos = faceBoundaryPointsList.get(0);
+                        }
+                        PointRelation pointSegmentRelation = Geom.e3D.pointSegmentRelation(aPos, bPos, mirrorMemberCoordinates);
+                        Coordinates projection = pointSegmentRelation.projection() != null ? pointSegmentRelation.projection() : aPos;
 
+                        Coordinates force = computeForce(mirrorMemberCoordinates, projection);
+                        forces.set(memberNode, force);
+                    }
                 }
             }
 
@@ -747,25 +747,6 @@ public abstract class DyModularForce extends ModularForce {
 
             double memberToProjectionMagnitude = Geom.e2D.magnitude(memberCoordinates.minus(projectionCoordinates));
 
-//            Coordinates distance = poleCoordinates.minus(distancePoint);
-
-//            Coordinates dividendCoordinates = new Coordinates(distance.x() - memberToProjectionMagnitude,
-//                    distance.y() - memberToProjectionMagnitude);
-//
-//            double dividendXSquared = Math.pow(dividendCoordinates.x(), 2);
-//            double dividendYSquared = Math.pow(dividendCoordinates.y(), 2);
-
-//            Coordinates dividend = new Coordinates(dividendXSquared, dividendYSquared);
-
-//            double quotientX = dividend.x() / memberToProjectionMagnitude;
-//            double quotientY = dividend.y() / memberToProjectionMagnitude;
-
-//            Coordinates quotient = new Coordinates(quotientX, quotientY);
-
-//            double forceX = quotient.x() * (memberCoordinates.minus(projectionCoordinates).x());
-//            double forceY = quotient.y() * (memberCoordinates.minus(projectionCoordinates).y());
-
-
             double desiredDistanceMinusMagnitude = 1 - memberToProjectionMagnitude;
             double dividend = Math.pow(desiredDistanceMinusMagnitude, 4);
             double divisor = memberToProjectionMagnitude;
@@ -778,6 +759,30 @@ public abstract class DyModularForce extends ModularForce {
 
             return force;
 
+        }
+
+        /**
+         * Computes the coordinates of a set of nodes that describe an artificial graph face overlaid
+         * on the circumference of a graph cluster circle
+         * @param centrePoint Coordinates of the pole node
+         * @param radius radius of the cluster circle
+         * @return List of Coordinates describing an artificial graph face superimposed on the circle
+         */
+        protected List<Coordinates> computeFaceBoundary(Coordinates centrePoint, double radius){
+            int faceDegree = 32;
+
+            List<Coordinates> faceNodesCoordinatesList = new ArrayList<Coordinates>();
+
+            for(int i = 0; i < faceDegree; i++){
+                double xCoordinates = centrePoint.x() + radius * Math.cos(2 * Math.PI * i / faceDegree);
+                double yCoordinates = centrePoint.y() + radius * Math.sin(2 * Math.PI * i / faceDegree);
+
+                Coordinates newFaceNodeCoordinates = new Coordinates(xCoordinates, yCoordinates);
+                faceNodesCoordinatesList.add(newFaceNodeCoordinates);
+
+            }
+
+            return faceNodesCoordinatesList;
         }
 
 
