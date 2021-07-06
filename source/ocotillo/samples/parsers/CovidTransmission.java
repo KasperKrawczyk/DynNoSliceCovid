@@ -1127,7 +1127,6 @@ public class CovidTransmission {
             if(dataset.personsMap.get(person.from).location.equalsIgnoreCase(locationFrom)
                     && dataset.personsMap.get(person.id).location.equalsIgnoreCase(locationTo)) {
                 edgeColor.set(edge, new Evolution<>(Color.ORANGE));
-                System.out.println("AHA");
                 edgeWidth.set(edge, new Evolution<>(1.2));
                 edgeWidth.get(edge).insert(new FunctionConst<>(transmissionInterval, 1.2));
             }

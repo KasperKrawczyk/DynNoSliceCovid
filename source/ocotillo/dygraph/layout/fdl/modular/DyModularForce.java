@@ -632,16 +632,12 @@ public abstract class DyModularForce extends ModularForce {
          * Used to determine the distance of the repulsion boundary from the pole node
          * Prevents the cluster members clustering too densely
          */
-        public double attractionFactor = 50;
+        public double attractionFactor = 60;
 
         protected final double desiredDistance;
         private NodeAttribute<Coordinates> forces;
 
-        /**
-         * Builds an edge repulsion force.
-         *
-         * @param desiredDistance the ideal edge distance.
-         */
+
         public PoleAttraction(double desiredDistance) {
             this.desiredDistance = desiredDistance;
         }
@@ -658,7 +654,11 @@ public abstract class DyModularForce extends ModularForce {
                 for (Node memberNode : cluster.members()) {
 
                     Node mirrorMemberNode = mirrorGraph().getNode(memberNode.id());
-                    Coordinates force = Geom.e2D.unitVector(poleCoordinates.minus(mirrorPositions().get(mirrorMemberNode))).timesIP(attractionFactor).minusIP();
+                    Coordinates mirrorMemberCoordinates = mirrorPositions().get(mirrorMemberNode);
+                    Coordinates force = poleCoordinates
+                            .minus(mirrorMemberCoordinates)
+                            .times(attractionFactor)
+                            .minus();
                     forces.set(mirrorMemberNode, force);
                 }
             }
@@ -747,8 +747,8 @@ public abstract class DyModularForce extends ModularForce {
 
             double memberToProjectionMagnitude = Geom.e2D.magnitude(memberCoordinates.minus(projectionCoordinates));
 
-            double desiredDistanceMinusMagnitude = 1 - memberToProjectionMagnitude;
-            double dividend = Math.pow(desiredDistanceMinusMagnitude, 4);
+            double desiredDistanceMinusMagnitude = 5 - memberToProjectionMagnitude;
+            double dividend = Math.pow(desiredDistanceMinusMagnitude, 2);
             double divisor = memberToProjectionMagnitude;
 
             double quotient = dividend / divisor;
