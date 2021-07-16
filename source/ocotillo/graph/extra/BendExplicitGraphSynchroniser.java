@@ -323,7 +323,8 @@ public class BendExplicitGraphSynchroniser {
      */
     private void updateMirrorEdgeBends(Edge edge, MirrorEdge mirrorEdge) {
         while (mirrorEdge.bends.size() < originalBends.get(edge).size()) {
-            Node bendNode = mirrorGraph.newNode();
+            Node bendNode = mirrorGraph.newNode(edge.source().id(), edge.source().originId());
+            System.out.println("edgeSource in updateMirrorEdgeBends = " + edge.source());
             mirrorEdge.bends.add(bendNode);
             reverseEdgeMap.put(bendNode, edge);
         }
@@ -506,7 +507,8 @@ public class BendExplicitGraphSynchroniser {
      */
     public Node addMirrorBend(MirrorEdge mirrorEdge, Edge segment, Coordinates bendPosition) {
         assert (mirrorEdge.segments.contains(segment)) : "The segment passed as parameter must belong to the mirror edge.";
-        Node newBend = mirrorGraph.newNode();
+        System.out.println("addMirrorBend() | mirrorEdge source = " + mirrorEdge.source + " | segment OrgID source = " + segment.source().originId());
+        Node newBend = mirrorGraph.newNode(null, mirrorEdge.source.id());
         Node previousPoint = segment.source();
         Node nextPoint = segment.target();
         Edge newSegmentA = mirrorGraph.newEdge(previousPoint, newBend);

@@ -48,7 +48,10 @@ public class DyGraphSamples {
 
         DyNodeAttribute<Coordinates> position = graph.nodeAttribute(StdAttribute.nodePosition);
         position.set(a, EvoBuilder.defaultAt(new Coordinates(0, 0))
-                .withRect(Interval.newClosed(0, 10), new Coordinates(10, 10), new Coordinates(0, 0), Interpolation.Std.mediumEndCharge)
+                .withRect(Interval.newClosed(0, 10),
+                        new Coordinates(10, 10),
+                        new Coordinates(0, 0),
+                        Interpolation.Std.mediumEndCharge)
                 .build());
         position.set(b, EvoBuilder.defaultAt(new Coordinates(0, 0))
                 .withRect(Interval.newClosed(0, 10), new Coordinates(-10, 0), new Coordinates(0, 0), Interpolation.Std.linear)

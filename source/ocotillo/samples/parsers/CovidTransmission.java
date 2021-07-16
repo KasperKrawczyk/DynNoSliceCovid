@@ -108,9 +108,6 @@ public class CovidTransmission {
         }
     }
 
-
-
-
     /**
      * Parses a single component into a list of personsSet
      *
@@ -212,8 +209,6 @@ public class CovidTransmission {
 
         findLocationTypes(contactsList);
 
-        //writePersonsWithLocations(personsMap, personsList, contactsList);
-
         return (new CovidDataSet(personsList, personsSetInDataset, personsMap, components,
                 contactsList, timeSteps, 0, timeSteps.length));
     }
@@ -258,7 +253,6 @@ public class CovidTransmission {
 
         findLocationTypes(contactsList);
 
-        writePersonsWithLocations(personsMap, personsList, contactsList);
 
         return (new CovidDataSet(personsList, personsSetInDataset, personsMap, components,
                 contactsList, timeSteps, 0, timeSteps.length));
@@ -266,11 +260,12 @@ public class CovidTransmission {
 
     /**
      * Parses components in the model
-     * Leaves in components with 50% or more infected in a specified location
+     * Leaves in components with more than a specified threshold of infected persons in a specified location
      *
      * @param personsFile file with the infection map
      * @param eventsFile  file with the events
      * @param contactsFile file with the contacts
+     * @param selectedFilterFactor selected percentage threshold to determine which components to retain
      * @param locationString string with a specified location, used for filtering
      * @return the transmission dataset
      */
@@ -311,21 +306,16 @@ public class CovidTransmission {
         ArrayList<CovidContactsFileParser.Contact> contactsList =
                 CovidContactsFileParser.readInAndFilter(personsMap, personsList, contactsFile);
 
-//        System.out.println("ARE THEY ALLOCATED?");
-        //THEY ARE!
-//        personsList.forEach(System.out::println);
 
-        //filtering out needs to take place AFTER locations have been assigned
+
+        //filtering out needs to take place after locations have been assigned
         List<List<Person>> componentsFiltered = new ArrayList<>();
         HashSet<Person> personsSetInDatasetFiltered = new HashSet<>();
 
         for(List<Person> component : componentsUnfiltered){
-            //System.out.println("DOES ANYTHING HAPPEN HERE?");
             if(filterComponent(component, locationString, selectedFilterFactor)){
-                //System.out.println("DOES ANYTHING HAPPEN HERE? YES IT DOES");
               componentsFiltered.add(component);
               personsSetInDatasetFiltered.addAll(component);
-              //component.forEach(System.out::println);
             }
         }
 
@@ -338,10 +328,6 @@ public class CovidTransmission {
         ArrayList<CovidContactsFileParser.Contact> contactsListFiltered =
                 CovidContactsFileParser.readInAndFilter(personsMapFiltered, personsListFiltered, contactsFile);
 
-        //findLocationTypes(contactsList);
-
-        //writePersonsWithLocations(personsMap, personsList, contactsList);
-
         return (new CovidDataSet(personsListFiltered, personsSetInDatasetFiltered, personsMapFiltered, componentsFiltered,
                 contactsListFiltered, timeSteps, 0, timeSteps.length));
     }
@@ -352,6 +338,26 @@ public class CovidTransmission {
 
         for(CovidContactsFileParser.Contact contact : contactsList){
             contactsSet.add(contact.location);
+        }
+    }
+
+    /**
+     * Prints current node set to a file
+     * @param nodeCollection collection of nodes in the embedding
+     */
+    public static void writeCurNodeSetLog(Collection<Node> nodeCollection){
+        try{
+            PrintWriter printWriter =
+                    new PrintWriter("C:\\Users\\kaspe\\IdeaProjects\\DynNoSlice\\data\\Covid\\curNodeSetLog.txt");
+
+            for(Node node : nodeCollection){
+                printWriter.println(node);
+            }
+
+            printWriter.close();
+
+        } catch (FileNotFoundException e){
+            System.out.println("File could not found");
         }
     }
 
@@ -457,11 +463,9 @@ public class CovidTransmission {
         double numOfPersInLocation = 0;
         for(Person person : component){
             if(person.location != null && person.location.equalsIgnoreCase(location)){
-                //System.out.println("AHA2!" + person);
                 numOfPersInLocation++;
             }
         }
-        // TODO could add a functionality to choose the threshold (a slider, e.g.?)
         return numOfPersInLocation / component.size() >= selectedFilterFactor;
     }
 
@@ -912,16 +916,18 @@ public class CovidTransmission {
         Color clusterStrokeColor = new Color(216, 239, 6, 255);
 
         HashMap<String, Node> polesHashMap = new HashMap<>();
+        List<Node> poleList = new ArrayList<>();
 
         Map<Integer, Node> nodeMap = new HashMap<>();
         Map<Node, Cluster> clusterMap = new HashMap<>();
 
         int polesIDCounter = 0;
 
-        //create poles
+        //draw poles
         for(String location : selectedLocationsList){
             polesIDCounter--;
-            Node pole = graph.newNode("" + location, "" + location);
+            Node pole = graph.newNode("" + location);
+            poleList.add(pole);
             presence.set(pole, new Evolution<>(false));
             label.set(pole, new Evolution<>(location));
             position.set(pole, new Evolution<>(new Coordinates(0, 0)));
@@ -939,6 +945,19 @@ public class CovidTransmission {
 //            clusterPresence.get(cluster).insert(new FunctionConst<>(clusterInterval, true));
 //            clusterMap.put(pole, cluster);
         }
+
+        Node test = graph.newNode("" + -1);
+        presence.set(test, new Evolution<>(false));
+        label.set(test, new Evolution<>("TEST"));
+        Interval testInterval = Interval.newRightClosed(-1, dataset.timeSteps.length);
+        position.set(test, new Evolution<>(new Coordinates(623, 623)));
+        position.set(test, EvoBuilder.defaultAt(new Coordinates(0, 0))
+                .withConst(testInterval, new Coordinates(-200, -200))
+                .build());
+        color.set(test, new Evolution<>(new Color(207, 80, 213)));
+        nodeMap.put(-99, test);
+
+        presence.get(test).insert(new FunctionConst<>(testInterval, true));
 
         //draw nodes, set initial node color
         for (Person person : dataset.personsSet) {
@@ -1031,7 +1050,9 @@ public class CovidTransmission {
 
         }
 
-        Commons.scatterNodesAroundClusterPoles(graph, 200, 2.5, 200);
+        writeCurNodeSetLog(graph.nodes());
+
+        Commons.scatterNodesAroundClusterPoles(graph, 200, 10, 50);
 
         Commons.mergePresenceFunctions(graph,
                 -1.5,
@@ -1395,11 +1416,4 @@ public class CovidTransmission {
                 Interval.newClosed(0, dataset.personsList.size() - 1),
                 dataset.locationsSet);
     }
-//    public static void main(String[] args) {
-//        File file = new File("data/Covid/testInfectionMap.txt");
-//        DyGraph graph = parseGraph(file, Mode.keepAppearedEdges);
-//        CovidDataSet cDS = parseComponents(file);
-//        cDS.personsSet.forEach(Person -> Person.events.stream().forEach(System.out::println));
-//    }
-
 }

@@ -128,8 +128,8 @@ public class SymmetricLookupTable<U extends Element, V extends Element, E> {
     /**
      * Returns true if the elements are both nodes or edges.
      *
-     * @param elementA the first element of the pair.
-     * @param elementB the second element of the pair.
+     * @param a the first element of the pair.
+     * @param b the second element of the pair.
      * @return true if the are of the same type, false otherwise.
      */
     private boolean sameClass(Element a, Element b) {

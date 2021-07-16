@@ -79,6 +79,51 @@ public class Commons {
         }
     }
 
+    public static void scatterNodesZero(DyGraph graph) {
+
+
+        for (Node node : graph.nodes()) {
+            graph.nodeAttribute(StdAttribute.nodePosition).set(node,
+                    new Evolution<>(new Coordinates(0.0, 0.0)));
+        }
+    }
+
+    public static void positionNodesOverCircle(DyGraph graph) {
+        DecimalFormat df = new DecimalFormat("###.##");
+
+        int faceDegree = graph.nodes().size();
+        int count = 0;
+
+        for (Node node : graph.nodes()) {
+            count++;
+
+            double xCoordinates = 50.0 * Math.cos(2 * Math.PI * count / faceDegree);
+            double yCoordinates = 50.0 * Math.sin(2 * Math.PI * count / faceDegree);
+
+            System.out.println(node.id() + " : x = " + df.format(xCoordinates) + " | y = " + df.format(yCoordinates));
+
+            Coordinates newFaceNodeCoordinates = new Coordinates(xCoordinates, yCoordinates);
+            graph.nodeAttribute(StdAttribute.nodePosition).set(node,
+                    new Evolution<>(newFaceNodeCoordinates));
+        }
+
+    }
+
+
+    public static void scatterNodesWithExclusion(DyGraph graph, double distance, List<Node> nodesToExclude) {
+        Random randomGen = new Random(73);
+
+        for (Node node : graph.nodes()) {
+            if(nodesToExclude.contains(node)){
+                System.out.println("nodeToExclude = " + node);
+                continue;
+            }
+            graph.nodeAttribute(StdAttribute.nodePosition).set(node,
+                    new Evolution<>(new Coordinates(randomGen.nextDouble() * distance,
+                            randomGen.nextDouble() * distance)));
+        }
+    }
+
     public static void scatterNodesAroundClusterPoles(DyGraph graph,
                                                       double clusterDistance,
                                                       double memberDistance,
@@ -116,6 +161,19 @@ public class Commons {
 
             }
         }
+    }
+
+    /**
+     * Computes the coordinates for a pole nodes that are overlaid
+     * on the circumference of circle
+     */
+    public static Coordinates computeCoordinatesOverCircle(int count, int numVertices){
+
+        double xCoordinates = 200.0 * Math.cos(2 * Math.PI * count / numVertices);
+        double yCoordinates = 200.0 * Math.sin(2 * Math.PI * count / numVertices);
+
+        return new Coordinates(xCoordinates, yCoordinates);
+
     }
 
     /**
