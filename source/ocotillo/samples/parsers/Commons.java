@@ -88,23 +88,42 @@ public class Commons {
         }
     }
 
-    public static void positionNodesOverCircle(DyGraph graph) {
+    public static Coordinates positionPoleOverCircle(DyGraph graph, int count, Node pole) {
         DecimalFormat df = new DecimalFormat("###.##");
 
-        int faceDegree = graph.nodes().size();
+        int faceDegree = graph.poles().size();
+
+        double xCoordinates = 50.0 * Math.cos(2 * Math.PI * count / faceDegree);
+        double yCoordinates = 50.0 * Math.sin(2 * Math.PI * count / faceDegree);
+
+        System.out.println(pole.originId() + " : x = " + df.format(xCoordinates) + " | y = " + df.format(yCoordinates));
+
+        Coordinates newFaceNodeCoordinates = new Coordinates(xCoordinates, yCoordinates);
+        graph.nodeAttribute(StdAttribute.nodePosition).set(pole, new Evolution<>(newFaceNodeCoordinates));
+
+
+        return newFaceNodeCoordinates;
+    }
+
+    public static void positionNodesOverCircle(NodeAttribute<Coordinates> mirrorPositions, List<Node> nodeList) {
+        DecimalFormat df = new DecimalFormat("###.##");
+
+        int faceDegree = nodeList.size();
         int count = 0;
 
-        for (Node node : graph.nodes()) {
+        for (Node node : nodeList) {
             count++;
 
             double xCoordinates = 50.0 * Math.cos(2 * Math.PI * count / faceDegree);
             double yCoordinates = 50.0 * Math.sin(2 * Math.PI * count / faceDegree);
 
-            System.out.println(node.id() + " : x = " + df.format(xCoordinates) + " | y = " + df.format(yCoordinates));
 
-            Coordinates newFaceNodeCoordinates = new Coordinates(xCoordinates, yCoordinates);
-            graph.nodeAttribute(StdAttribute.nodePosition).set(node,
-                    new Evolution<>(newFaceNodeCoordinates));
+            System.out.println(node.originId() + " : x = " + df.format(xCoordinates) + " | y = " + df.format(yCoordinates));
+
+            Coordinates oldCoordinates = mirrorPositions.get(node);
+
+            Coordinates newFaceNodeCoordinates = new Coordinates(xCoordinates, yCoordinates, oldCoordinates.z());
+            mirrorPositions.set(node, newFaceNodeCoordinates);
         }
 
     }
@@ -131,11 +150,12 @@ public class Commons {
         Random randomGen = new Random(73);
         Set<Node> nodesDone = new HashSet<>();
         DecimalFormat df = new DecimalFormat("###.##");
+        int count = 0;
 
         for(Cluster cluster : graph.clusters()){
+            count++;
             Node poleNode = cluster.pole();
-            Coordinates poleCoordinates = new Coordinates(randomGen.nextDouble() * clusterDistance,
-                    randomGen.nextDouble() * clusterDistance);
+            Coordinates poleCoordinates = positionPoleOverCircle(graph, count, poleNode);
             graph.nodeAttribute(StdAttribute.nodePosition).set(poleNode, new Evolution<>(poleCoordinates));
             nodesDone.add(poleNode);
 

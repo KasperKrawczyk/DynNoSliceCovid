@@ -507,7 +507,7 @@ public class BendExplicitGraphSynchroniser {
      */
     public Node addMirrorBend(MirrorEdge mirrorEdge, Edge segment, Coordinates bendPosition) {
         assert (mirrorEdge.segments.contains(segment)) : "The segment passed as parameter must belong to the mirror edge.";
-        System.out.println("addMirrorBend() | mirrorEdge source = " + mirrorEdge.source + " | segment OrgID source = " + segment.source().originId());
+        //System.out.println("addMirrorBend() | mirrorEdge source = " + mirrorEdge.source + " | segment OrgID source = " + segment.source().originId());
         Node newBend = mirrorGraph.newNode(null, mirrorEdge.source.id());
         Node previousPoint = segment.source();
         Node nextPoint = segment.target();

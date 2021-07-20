@@ -1135,6 +1135,7 @@ public class Gui extends JFrame {
         protected final Experiment.Covid covidExperiment;
 
         protected final JLabel titleLabel;
+        protected final JButton pinNodesButton;
         protected final JButton computeButton;
         protected final JLabel computationReport;
         protected final JButton viewCubeButton;
@@ -1145,6 +1146,7 @@ public class Gui extends JFrame {
         private SpaceTimeCubeSynchroniser synchro;
 
         private static final long serialVersionUID = 1L;
+        private boolean isPinned = false;
         private final JList<String> locationOptionsList;
         private List<String> selectedLocationsList;
         protected final JPanel locationOptionsListPanel;
@@ -1158,12 +1160,20 @@ public class Gui extends JFrame {
             titleLabel = new JLabel(type, JLabel.LEFT);
             setSize(titleLabel, 220, 20);
 
+            pinNodesButton = new JButton("Pin pole nodes");
+            pinNodesButton.setToolTipText("Click to keep pole nodes pinned");
+            setSize(pinNodesButton, 365, 25);
+            pinNodesButton.setBackground(activeButton);
+            pinNodesButton.addActionListener((ActionEvent ae) -> {
+                isPinned = true;
+                pinNodesButton.setEnabled(false);
+            });
+
             ArrayList<String> listOptionsArrayList = new ArrayList<>(covidExperiment.locationHighlightOptions);
             //listOptionsArrayList.add(0, "No poles chosen");
 
             String[] listOptions = listOptionsArrayList.toArray(new String[0]);
             selectedLocationsList = new ArrayList<>();
-            selectedLocationsList.add("Office");
 
             locationOptionsListPanel = new JPanel();
             locationOptionsList = new JList<>(listOptions);
@@ -1227,7 +1237,7 @@ public class Gui extends JFrame {
         @Override
         protected SpaceTimeCubeSynchroniser getSynchro() throws NoSuchElementException{
             DyGraph graph = covidExperiment.getContinuousCopyWithMultipleLocationsAttraction(selectedLocationsList);
-            DyModularFdl algorithm = experiment.getContinuousLayoutAlgorithmCovid(graph, null);
+            DyModularFdl algorithm = experiment.getContinuousLayoutAlgorithmCovid(graph, null, isPinned);
             SpaceTimeCubeSynchroniser synchro = algorithm.getSyncro();
             ModularStatistics stats = algorithm.iterate(100);
             String time = stats.getTotalRunnningTime().getSeconds() + "."
@@ -1239,6 +1249,8 @@ public class Gui extends JFrame {
         private void preComputationLayout() {
             removeAll();
             add(titleLabel);
+            add(Box.createRigidArea(new Dimension(5, 5)));
+            this.add(pinNodesButton);
             add(Box.createRigidArea(new Dimension(5, 5)));
             this.add(computeButton);
             add(Box.createRigidArea(new Dimension(5, 5)));
@@ -1256,6 +1268,8 @@ public class Gui extends JFrame {
         private void postComputationLayout() {
             removeAll();
             add(titleLabel);
+            add(Box.createRigidArea(new Dimension(5, 5)));
+            this.add(pinNodesButton);
             add(Box.createRigidArea(new Dimension(5, 5)));
             this.add(computationReport);
             add(Box.createRigidArea(new Dimension(5, 5)));
@@ -1281,6 +1295,7 @@ public class Gui extends JFrame {
             revalidate();
             EventQueue.invokeLater(() -> {
                 synchro = getSynchro();
+                pinNodesButton.setEnabled(false);
                 viewCubeButton.setBackground(activeButton);
                 viewAnimationButton.setBackground(activeButton);
                 onTimeButton.setBackground(activeButton);

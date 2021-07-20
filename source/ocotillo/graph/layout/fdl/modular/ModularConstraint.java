@@ -25,9 +25,10 @@ import ocotillo.geometry.GeomNumeric;
 import ocotillo.graph.Edge;
 import ocotillo.graph.Node;
 import ocotillo.graph.NodeAttribute;
+import ocotillo.samples.parsers.*;
 
 /**
- * Constrain for the ModularFdl algorithm.
+ * Constraint for the ModularFdl algorithm.
  */
 public abstract class ModularConstraint extends ModularElement {
 
@@ -345,8 +346,8 @@ public abstract class ModularConstraint extends ModularElement {
         /**
          * The pinned nodes.
          */
-        protected NodeAttribute<Boolean> pinnedNodes;
-        protected List<Node> pinnedNodesList;
+        protected NodeAttribute<Boolean> pinnedPoles;
+        protected List<String> pinnedPolesLabelsList = new ArrayList<>();
 
         /**
          * Constructs a pinned nodes constraint.
@@ -354,42 +355,54 @@ public abstract class ModularConstraint extends ModularElement {
          * @param pinnedOriginalNodes the original pinned nodes.
          */
         public PinnedPoles(NodeAttribute<Boolean> pinnedOriginalNodes) {
-            this.pinnedNodes = pinnedOriginalNodes;
+            this.pinnedPoles = pinnedOriginalNodes;
         }
+
 
         /**
-         * Constructs a pinned nodes constraint.
+         * Constructs a pinned poles constraint.
          *
-         * @param poleLabels the list of labels of original poles.
+         * @param originalPolesList the list of original poles.
          */
-        public PinnedPoles(List<String> poleLabels) {
-            this.pinnedNodes = new NodeAttribute<>(false);
-            this.pinnedNodesList = setPinnedNodes(poleLabels);
-
-
-
+        public PinnedPoles(Collection<Node> originalPolesList) {
+            this.pinnedPoles = new NodeAttribute<>(false);
+            this.pinnedPolesLabelsList = setPinnedNodes(originalPolesList);
         }
 
-        private List<Node> setPinnedNodes(List<String> poleLabels){
-            List<Node> mirrorNodesToPin = new ArrayList<>();
-
-            for(Node node : mirrorGraph().nodes()){
-                if(poleLabels.contains(node.originId())) {
-                    pinnedNodesList.add(node);
-                    pinnedNodes.set(node, true);
-                }
+        private List<String> setPinnedNodes(Collection<Node> originalPolesList){
+            List<String> pinnedPolesLabelsList = new ArrayList<>();
+            for(Node pole : originalPolesList){
+                pinnedPolesLabelsList.add(pole.originId());
             }
-            return mirrorNodesToPin;
+            return pinnedPolesLabelsList;
         }
 
         @Override
         protected NodeAttribute<Double> computeConstraints() {
             NodeAttribute<Double> maxMovement = new NodeAttribute<>(Double.POSITIVE_INFINITY);
-            for (Node node : mirrorGraph().nodes()) {
-                if (pinnedNodes.get(node)) {
-                    maxMovement.set(node, 0.0);
+            List<Node> current = new ArrayList<>();
+
+
+            for(Node node : mirrorGraph().nodes()) {
+                if (pinnedPolesLabelsList.contains(node.originId())) {
+                    current.add(node);
                 }
             }
+
+            //Commons.positionNodesOverCircle(mirrorPositions(), current);
+//TODO here reset poles positions to previous ones
+            for (Node pole : mirrorGraph().nodes()) {
+
+                if (pinnedPolesLabelsList.contains(pole.originId())) {
+                    System.out.println("node = " + pole.originId());
+                    mirrorPositions().get(pole);
+                    current.add(pole);
+                    maxMovement.set(pole, 0.0);
+                    forces().set(pole, new Coordinates(0.0, 0.0, 0.0));
+
+                }
+            }
+
             return maxMovement;
         }
     }

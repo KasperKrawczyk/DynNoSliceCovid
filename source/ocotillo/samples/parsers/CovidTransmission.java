@@ -926,7 +926,7 @@ public class CovidTransmission {
         //draw poles
         for(String location : selectedLocationsList){
             polesIDCounter--;
-            Node pole = graph.newNode("" + location);
+            Node pole = graph.newNode("" + location, "" + location);
             poleList.add(pole);
             presence.set(pole, new Evolution<>(false));
             label.set(pole, new Evolution<>(location));
@@ -946,18 +946,18 @@ public class CovidTransmission {
 //            clusterMap.put(pole, cluster);
         }
 
-        Node test = graph.newNode("" + -1);
-        presence.set(test, new Evolution<>(false));
-        label.set(test, new Evolution<>("TEST"));
-        Interval testInterval = Interval.newRightClosed(-1, dataset.timeSteps.length);
-        position.set(test, new Evolution<>(new Coordinates(623, 623)));
-        position.set(test, EvoBuilder.defaultAt(new Coordinates(0, 0))
-                .withConst(testInterval, new Coordinates(-200, -200))
-                .build());
-        color.set(test, new Evolution<>(new Color(207, 80, 213)));
-        nodeMap.put(-99, test);
+//        Node test = graph.newNode("" + -1);
+//        presence.set(test, new Evolution<>(false));
+//        label.set(test, new Evolution<>("TEST"));
+//        Interval testInterval = Interval.newRightClosed(-1, dataset.timeSteps.length);
+//        position.set(test, new Evolution<>(new Coordinates(623, 623)));
+//        position.set(test, EvoBuilder.defaultAt(new Coordinates(0, 0))
+//                .withConst(testInterval, new Coordinates(-200, -200))
+//                .build());
+//        color.set(test, new Evolution<>(new Color(207, 80, 213)));
+//        nodeMap.put(-99, test);
+//        presence.get(test).insert(new FunctionConst<>(testInterval, true));
 
-        presence.get(test).insert(new FunctionConst<>(testInterval, true));
 
         //draw nodes, set initial node color
         for (Person person : dataset.personsSet) {
@@ -1052,7 +1052,7 @@ public class CovidTransmission {
 
         writeCurNodeSetLog(graph.nodes());
 
-        Commons.scatterNodesAroundClusterPoles(graph, 200, 10, 50);
+        Commons.scatterNodesAroundClusterPoles(graph, 200, 2, 50);
 
         Commons.mergePresenceFunctions(graph,
                 -1.5,

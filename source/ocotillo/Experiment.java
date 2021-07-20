@@ -155,7 +155,7 @@ public abstract class Experiment {
      * @param postProcessing eventual post processing.
      * @return the graph drawing algorithm.
      */
-    public DyModularFdl getContinuousLayoutAlgorithmCovid(DyGraph dyGraph, ModularPostProcessing postProcessing) {
+    public DyModularFdl getContinuousLayoutAlgorithmCovid(DyGraph dyGraph, ModularPostProcessing postProcessing, boolean isPinned) {
 
 
         DyModularFdl.DyModularFdlBuilder builder = new DyModularFdl.DyModularFdlBuilder(dyGraph, dataset.suggestedTimeFactor)
@@ -168,8 +168,12 @@ public abstract class Experiment {
                 .withForce(new DyModularForce.NonClusterNodesRepulsion(12.5))
                 .withConstraint(new ModularConstraint.DecreasingMaxMovement(2 * delta))
                 .withConstraint(new ModularConstraint.MovementAcceleration(2 * delta, Geom.e3D))
-                //.withConstraint(new ModularConstraint.PinnedNodes(dyGraph.nodes()))
+                //.withConstraint(new ModularConstraint.PinnedPoles(dyGraph.poles()))
                 .withPostProcessing(new DyModularPostProcessing.FlexibleTimeTrajectories(delta * 1.5, delta * 2.0, Geom.e3D));
+
+        if(isPinned){
+            builder.withConstraint(new ModularConstraint.PinnedPoles(dyGraph.poles()));
+        }
 
         if (postProcessing != null) {
             builder.withPostProcessing(postProcessing);
