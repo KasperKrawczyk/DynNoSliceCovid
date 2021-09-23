@@ -23,7 +23,7 @@ Allows for two locations / settings to be picked. Given edge e, whenever node ns
 Allows the user to choose a location / setting, which will be represented as an invisible node nlocation in the embedding. All nodes to have been infected in the location of choice will be attracted towards the invisible node’s position, and will have their size increased by a factor of 2. The force pulling nodes towards nlocation is twice of that which attracts any other two extremities of all other edges.
 
 ### Continuous with Multiple Locations Attraction 
-It can be thought of as a version of Continuous with Location Attraction, where there are multiple n<sub>location</sub>i (where i stands for a cluster’s index) nodes, each embedded as a cluster pole node. Hence, all nodes nattractedi associated with a given location of infection will be encouraged to stay within ith cluster’s circumference. If there are enough vectors pulling nodes in nattractedi node’s component away from the ith cluster, there is a chance that nattractedi may be pulled out of the circumference.
+It can be thought of as a version of Continuous with Location Attraction, where there are multiple n<sub>location<sup>i</sup></sub> (where i stands for a cluster’s index) nodes, each embedded as a cluster pole node. Hence, all nodes nattractedi associated with a given location of infection will be encouraged to stay within ith cluster’s circumference. If there are enough vectors pulling nodes in nattractedi node’s component away from the ith cluster, there is a chance that nattractedi may be pulled out of the circumference.
 
 ## Getting Started
 
