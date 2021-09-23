@@ -55,3 +55,4 @@ This project is licensed under the [Apache License, Version 2.0](http://www.apac
 Inspiration, code snippets, etc.
 * Danie Archambault
 * Paolo Simonetto
+* Max Sondag
