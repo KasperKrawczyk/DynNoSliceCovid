@@ -7,7 +7,7 @@ One of the applications of graph drawing is visualising disease spread in a popu
 <embed src="https://github.com/KasperKrawczyk/DynNoSliceCovid/blob/pinned_nodes/Animating_Disease_Spread_With_Location_Poster.pdf" width="500" height="375" 
  type="application/pdf">
  
-<object width="400" height="500" type="application/pdf" data="https://github.com/KasperKrawczyk/DynNoSliceCovid/blob/pinned_nodes/Animating_Disease_Spread_With_Location_Poster.pdf?#zoom=85&scrollbar=0&toolbar=0&navpanes=0">
+<object width="400" height="500" type="application/pdf" data="DynNoSliceCovid/blob/pinned_nodes/Animating_Disease_Spread_With_Location_Poster.pdf?#zoom=85&scrollbar=0&toolbar=0&navpanes=0">
     <p>Insert your error message here, if the PDF cannot be displayed.</p>
 </object>
 
