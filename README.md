@@ -4,6 +4,9 @@ https://user-images.githubusercontent.com/71812535/134390791-da3b4033-097a-40f0-
 
 One of the applications of graph drawing is visualising disease spread in a popu-lation. Specifically, event-based graph animation can help visualise contact trac-ing model simulations. Building on the DynNoSlice algorithm, we proposea way of incorporating two types of relationships useful in epidemiology into adynamic graph animation: the vector-infected relationship as well as the ‘loca-tion of infection’ relationship. We focus on a COVID contact tracing model, which provides information on an infected person’s infection status, who theywere in contact with and the place or setting of infection. These characteristicsare  accounted  for  in  the  presented  algorithm,  and  encoded,  respectively,  withcolour  (including  saturation),  insertion  of  edges  (denoting  either  the  location,or the infection relationship), and grouping of nodes with using the ’cluster’ el-ements. Graphs are drawn synchronously on a 2D plane, and in a space-timecube,  with  planes  as  time  slices  arranged  perpendicularly  to  the  time  axisT.Variations of the algorithm use graph forces in either 2D or 2D + T, componentfiltering, and node highlights to accentuate various aspects of the model.
 
+<embed src="https://github.com/KasperKrawczyk/DynNoSliceCovid/blob/pinned_nodes/Animating_Disease_Spread_With_Location_Poster.pdf" width="500" height="375" 
+ type="application/pdf">
+
 ## Description
 
 <p>
